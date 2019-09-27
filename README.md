@@ -1,4 +1,4 @@
-# KilomuxRSD
+# Kilomux RSD
 Yaeltex controller for RSD
 
 ### Carpeta de campo
