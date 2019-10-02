@@ -21,10 +21,10 @@
 
 #define BWIDTH 32 
 #define WIDTH ((BWIDTH*8)-1)
-#define PIN_R     10        // Pin de arduino conectado al LED Rojo
+#define PIN_R     13        // Pin de arduino conectado al LED Rojo
 #define PIN_G     11        // Pin de arduino conectado al LED Verde
 #define PIN_B     12        // Pin de arduino conectado al LED Azul
-#define PIN_W     13        // Pin de arduino conectado al LED Blanco
+#define PIN_W     10        // Pin de arduino conectado al LED Blanco
 
 #define SERIAL_COMMS
 
