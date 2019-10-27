@@ -1,9 +1,5 @@
 /* Autor: derfaq (Facundo Daguerre) - Rolling Shutter Displays 
- * kilomux library by Franco Grassano - YAELTEX
  * Date: 09/27/19
- * See the proyects:
- * https://github.com/Yaeltex/KilomuxArduinoLibrary
- * https://github.com/Rolling-Shutter-Displays/RSD
  */
 
 /*
