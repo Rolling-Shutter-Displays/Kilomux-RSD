@@ -85,11 +85,34 @@ void draw() {
   white.clear();
 
   updateKm();
-  
-  red.fill( WIDTH/2 - ( pot[4]>>3 ) , WIDTH/2 + ( pot[4]>>3 ) + 1 );
-  green.fill( WIDTH/2 - ( pot[5]>>3 ) , WIDTH/2 + ( pot[5]>>3 ) + 1 );
-  blue.fill( WIDTH/2 - ( pot[6]>>3 ) , WIDTH/2 + ( pot[6]>>3 ) + 1 );
-  white.fill( WIDTH/2 - ( pot[7]>>3 ) , WIDTH/2 + ( pot[7]>>3 ) + 1 );
+
+  if ( pot[4] < 512 ) {
+    red.fill( WIDTH/2 - ( pot[4]>>2 ) , WIDTH/2 + ( pot[4]>>2 ) + 1 );
+  } else {
+    red.fill();
+    red.clear(  WIDTH/2 - ( (pot[4] - 512 )>>2 ) , WIDTH/2 + ( (pot[4] - 512 )>>2 ) + 1 );
+  }
+
+  if ( pot[5] < 512 ) {
+    green.fill( WIDTH/2 - ( pot[5]>>2 ) , WIDTH/2 + ( pot[5]>>2 ) + 1 );
+  } else {
+    green.fill();
+    green.clear(  WIDTH/2 - ( (pot[5] - 512 )>>2 ) , WIDTH/2 + ( (pot[5] - 512 )>>2 ) + 1 );
+  }
+
+  if ( pot[6] < 512 ) {
+    blue.fill( WIDTH/2 - ( pot[6]>>2 ) , WIDTH/2 + ( pot[6]>>2 ) + 1 );
+  } else {
+    blue.fill();
+    blue.clear( WIDTH/2 - ( (pot[6] - 512 )>>2 ) , WIDTH/2 + ( (pot[6] - 512 )>>2 ) + 1 );
+  }
+
+  if ( pot[7] < 512 ) {
+    white.fill( WIDTH/2 - ( pot[7]>>2 ) , WIDTH/2 + ( pot[7]>>2 ) + 1 );
+  } else {
+    white.fill();
+    white.clear(  WIDTH/2 - ( (pot[7] - 512 )>>2 ) , WIDTH/2 + ( (pot[7] - 512 )>>2 ) + 1 );
+  }
 
 }
 
