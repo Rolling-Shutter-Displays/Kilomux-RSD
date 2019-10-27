@@ -73,8 +73,8 @@ void loop() {
   rsd.update();
   
   // Tuning: KiloMux way
-  int tick = map( KmShield.analogReadKm(MUX_A, 0) , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
-  int fine = map( KmShield.analogReadKm(MUX_A, 1) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
+  int tick = map( KmShield.analogReadKm( MUX_A, 0 ) , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
+  int fine = map( KmShield.analogReadKm( MUX_A, 1 ) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
   rsd.setTick( tick );
   rsd.setFine( fine );
                                                              

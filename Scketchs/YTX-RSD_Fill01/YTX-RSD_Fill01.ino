@@ -73,8 +73,8 @@ void loop() {
   rsd.update();
   
   // Tuning: KiloMux way
-  int tick = map( KmShield.analogReadKm(MUX_A, 0) , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
-  int fine = map( KmShield.analogReadKm(MUX_A, 1) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
+  int tick = map( KmShield.analogReadKm( MUX_A, 0 ) , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
+  int fine = map( KmShield.analogReadKm( MUX_A, 1 ) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
   rsd.setTick( tick );
   rsd.setFine( fine );
                                                              
@@ -83,28 +83,11 @@ void loop() {
 //Let's draw!
 void draw() {
   display.clear();
-  
-  //Standarized order of the SMPTE/EBU color bar image : https://en.wikipedia.org/wiki/SMPTE_color_bars
-  //from left to right, the colors are white, yellow, cyan, green, magenta, red,  blue and black
-  for( int i = 0 ; i <= WIDTH ; i++ ) {
-    colour c = ( i * 8 ) / WIDTH;
-    display.line( i , c );
-  }
+  white.clear();
 
-  //Grid resolution
-  for( int i = 0 ; i < BWIDTH/2 ; i++ ) {
-    if( 1 - i%2 ) display.line( i , WHITE );
-  }
+  red.fill( 0 , KmShield.analogReadKm( MUX_A, 4 )>>2 );
+  green.fill( 0 , KmShield.analogReadKm( MUX_A, 5 )>>2 );
+  blue.fill( 0 , KmShield.analogReadKm( MUX_A, 6 )>>2 );
+  white.fill( 0 , KmShield.analogReadKm( MUX_A, 7 )>>2 );
 
-#if defined(SERIAL_COMMS)
-  //Serial diagnosis
-  Serial.print("@frsd: ");
-  Serial.print( rsd.getFrequency() , 10 );
-  Serial.print(" , BWIDHT: ");
-  Serial.print(BWIDTH);
-  Serial.print(" , tick: ");
-  Serial.print( rsd.getTick() );
-  Serial.print(" , fine: ");
-  Serial.println( rsd.getFine() );
-#endif  // endif COMUNICACION_SERIAL
 }
