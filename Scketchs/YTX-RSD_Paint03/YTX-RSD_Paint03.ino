@@ -72,7 +72,6 @@ void setup() {
   KmShield.digitalWritePortKm( 0x81 , 2 );
   delay(100);
   KmShield.digitalWritePortKm( 0x00 , 2 );
-  
   }
   
   //Setup of the RSD 

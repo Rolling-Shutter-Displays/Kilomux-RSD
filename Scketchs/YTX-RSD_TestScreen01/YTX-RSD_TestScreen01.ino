@@ -1,5 +1,5 @@
 /* Autor: derfaq (Facundo Daguerre) - Rolling Shutter Displays 
- * Date: 10/28/19
+ * Date: 09/27/19
  */
 
 /*
@@ -43,34 +43,10 @@ Channel white( PIN_W , COMMON_CATHODE , BWIDTH );
 Screen display( &red , &green , &blue );
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// Global variables
-
-unsigned int pot[8];
-unsigned int prevPot[8];
-
-bool button[8];
-bool prevButton[8];
 
 void setup() { 
   KmShield.init();                                    // Initialize Kilomux shield hardware
-  updateKm();
 
-  { // Presentation
-  KmShield.digitalWritePortKm( 0x18 , 2 );
-  delay(200);
-  KmShield.digitalWritePortKm( 0x24 , 2 );
-  delay(50);
-  KmShield.digitalWritePortKm( 0x42 , 2 );
-  delay(50);
-  KmShield.digitalWritePortKm( 0x81 , 2 );
-  delay(50);
-  KmShield.digitalWritePortKm( 0x00 , 2 );
-  delay(100);
-  KmShield.digitalWritePortKm( 0x81 , 2 );
-  delay(100);
-  KmShield.digitalWritePortKm( 0x00 , 2 );
-  }
-  
   //Setup of the RSD 
   rsd.begin( 30 , BWIDTH );
   
@@ -80,6 +56,7 @@ void setup() {
   rsd.attachChannel( white );
 
   rsd.attachDraw( draw );
+
   
 #if defined( SERIAL_COMMS )
   Serial.begin( 115200 );
@@ -92,8 +69,8 @@ void loop() {
   rsd.update();
   
   // Tuning: KiloMux way
-  int tick = map( pot[0] , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
-  int fine = map( pot[1] , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
+  int tick = map( KmShield.analogReadKm( MUX_A, 0 ) , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
+  int fine = map( KmShield.analogReadKm( MUX_A, 1 ) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
   rsd.setTick( tick );
   rsd.setFine( fine );
                                                              
@@ -102,55 +79,28 @@ void loop() {
 //Let's draw!
 void draw() {
   display.clear();
-  white.clear();
-
-  updateKm();
-
-  float param[4];
-  float scale = 5.0;
-
-  for( int i = 0 ; i < 4 ; i++ ) {
-    param[i] = ( scale * (float)( pot[4+i] ) )/ 512.0 - scale;
-  }
-
-  /*
-  param[0] = 1;
-  param[1] = 1.2;
-  param[2] = 1.3;
-  param[3] = 1;
-  */
   
-  if( param[0] > 0 ) { 
-    red.fill( 0 , (uint16_t)( frameCount*param[0] ) % WIDTH );
-  } else {
-    red.fill( WIDTH - (uint16_t)( frameCount*param[0] ) % WIDTH ,  WIDTH );
+  //Standarized order of the SMPTE/EBU color bar image : https://en.wikipedia.org/wiki/SMPTE_color_bars
+  //from left to right, the colors are white, yellow, cyan, green, magenta, red,  blue and black
+  for( int i = 0 ; i <= WIDTH ; i++ ) {
+    colour c = ( i * 8 ) / WIDTH;
+    display.line( i , c );
   }
 
-  if( param[1] > 0 ) { 
-    green.fill( 0 , (uint16_t)( frameCount*param[1] ) % WIDTH );
-  } else {
-    green.fill( WIDTH - (uint16_t)( frameCount*param[1] ) % WIDTH ,  WIDTH );
+  //Grid resolution
+  for( int i = 0 ; i < BWIDTH/2 ; i++ ) {
+    if( 1 - i%2 ) display.line( i , WHITE );
   }
 
-  if( param[2] > 0 ) { 
-    blue.fill( 0 , (uint16_t)( frameCount*param[2] ) % WIDTH );
-  } else {
-    blue.fill( WIDTH - (uint16_t)( frameCount*param[2] ) % WIDTH ,  WIDTH );
-  }
-
-
-}
-
-void updateKm() {
-  // Update pot values
-  for( int i = 0 ; i < 8 ; i++ ) {
-    prevPot[i] = pot[i];
-    pot[i] = KmShield.analogReadKm( MUX_A, i );
-  }
-  
-  // Update button states
-  for( int i = 0 ; i < 8 ; i++ ) {
-    prevButton[i] = button[i];
-    button[i] = KmShield.digitalReadKm( MUX_B , i , PULLUP );
-  }
+#if defined(SERIAL_COMMS)
+  //Serial diagnosis
+  Serial.print("@frsd: ");
+  Serial.print( rsd.getFrequency() , 10 );
+  Serial.print(" , BWIDHT: ");
+  Serial.print(BWIDTH);
+  Serial.print(" , tick: ");
+  Serial.print( rsd.getTick() );
+  Serial.print(" , fine: ");
+  Serial.println( rsd.getFine() );
+#endif  // endif COMUNICACION_SERIAL
 }
