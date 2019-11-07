@@ -14,8 +14,8 @@
  * ║     x        x        x        x                                ║
  * ║     ○        ○        ○        ○                                ║
  * ║                                                                 ║
- * ║    Bloq.                                                        ║
- * ║    Freq.     x        x        x                                ║
+ * ║    Bloq.     Prev     Next                                      ║
+ * ║    Freq.     Button   Button   x                                ║
  * ║     .        .        .        .                                ║
  * ║     ■        ■        ■        ■                                ║
  * ║                                                                 ║
@@ -77,6 +77,9 @@ char buttonPushCounter[8];   // counter for the number of button presses
 bool led[8];
 bool bloq = false;
 
+int screen = 0;
+const int screen_size = 1;
+
 //  Beginnig  /////////////////////////////////////////////////////////////////////////////
 
 void setup() { 
@@ -115,11 +118,13 @@ void loop() {
                                                              
 }
 
-// Let's draw! //////////////////////////////////////////////////////////////////////////
+// Screens //////////////////////////////////////////////////////////////////////////////
 
-void draw() {
+void testScreenRGB() {
   //Clear screen
   display.clear();
+  //Clear white
+  white.clear();
   
   //Standarized order of the SMPTE/EBU color bar image : https://en.wikipedia.org/wiki/SMPTE_color_bars
   //from left to right, the colors are white, yellow, cyan, green, magenta, red,  blue and black
@@ -132,7 +137,35 @@ void draw() {
   for( int i = 0 ; i < BWIDTH/2 ; i++ ) {
     if( 1 - i%2 ) display.line( i , WHITE );
   }
+}
 
+void testScreenRGBW() {
+  //Clear screen
+  display.clear();
+  //Fill white
+  white.fill();
+  
+  //Standarized order of the SMPTE/EBU color bar image : https://en.wikipedia.org/wiki/SMPTE_color_bars
+  //from left to right, the colors are white, yellow, cyan, green, magenta, red,  blue and black
+  for( int i = 0 ; i <= WIDTH ; i++ ) {
+    colour c = ( i * 8 ) / WIDTH;
+    display.line( i , c );
+  }
+
+  //Grid resolution
+  for( int i = 0 ; i < BWIDTH/2 ; i++ ) {
+    if( 1 - i%2 ) display.line( i , WHITE );
+  }
+}
+
+void (*screens[])() = { testScreenRGB , testScreenRGBW };
+
+// Let's draw! //////////////////////////////////////////////////////////////////////////
+
+void draw() {
+
+  screens[screen]();
+  
   //Serial diagnosis
   Serial.print("@frsd: ");
   Serial.print( rsd.getFrequency() , 10 );
@@ -164,23 +197,64 @@ void updateKm() {
   for( int i = 0 ; i < 8 ; i++ ) {
     buttonState[i] = KmShield.digitalReadKm( MUX_B , i , PULLUP );
     
-    if ( buttonState[i] != buttonLastState[i] ) {
-      if ( buttonState[i] == LOW ) buttonPushCounter[i]++;
-    }
+    switch ( i ) {
 
+    case 0 : //Bloq button
+      if ( buttonState[i] != buttonLastState[i] ) {
+        if ( buttonState[i] == LOW ) buttonPushCounter[i]++;
+      }
+      break;
+
+    case 1: //prev Button
+      if ( !buttonState[i] ) {
+        led[i] = HIGH;
+        if ( buttonLastState[i] ) {
+          if ( screen > 0 ) {
+            screen--;
+          } else {
+            screen = screen_size;
+          }
+        }
+      } else {
+        led[i] = LOW;
+      }
+      break;
+
+    case 2: //next Button
+      if ( !buttonState[i] ) {
+        led[i] = HIGH;
+        if ( buttonLastState[i] ) {
+          if ( screen < screen_size ) {
+            screen++;
+          } else {
+            screen = 0;
+          }
+        }
+      } else {
+        led[i] = LOW;
+      }
+      break;
+     break;
+
+     default: break;
+    }
+    
     buttonLastState[i]= buttonState[i];
   }
 
+  
   //Update leds and states
   for( int i = 0 ; i < 4 ; i++ ) {
-    if ( buttonPushCounter[i]&1 ) {
-      led[i] = HIGH;
-      if ( !i ) bloq = true;
-    } else {
-      led[i] = LOW;
-      if( !i ) bloq = false;
+    if ( i == 0 ) {
+      if ( buttonPushCounter[i]&1 ) {
+        led[i] = HIGH;
+        if ( !i ) bloq = true;
+      } else {
+        led[i] = LOW;
+        if( !i ) bloq = false;
+      }
     }
+    
     KmShield.digitalWriteKm( i + 8 , led[i] );
   }
-    
 }
