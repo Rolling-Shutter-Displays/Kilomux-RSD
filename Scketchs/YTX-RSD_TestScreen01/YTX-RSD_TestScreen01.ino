@@ -2,9 +2,33 @@
  * Date: 09/27/19
  */
 
-/*
- * Inclusión de librerías. 
+ /* 
+ * Layout
+ * ╔═════════════════════════════════════════════════════════════════╗
+ * ║                                                                 ║
+ * ║                              Param                              ║
+ * ║   Gruesa    Fina    Shift      x                                ║
+ * ║     ○        ○        ○        ○                                ║
+ * ║                                                 RSD             ║
+ * ║   Param    Param    Param    Param               ☼              ║
+ * ║     x        x        x        x                                ║
+ * ║     ○        ○        ○        ○                                ║
+ * ║                                                                 ║
+ * ║    Bloq.     Prev     Next                                      ║
+ * ║    Freq.     Button   Button   x                                ║
+ * ║     .        .        .        .                                ║
+ * ║     ■        ■        ■        ■                                ║
+ * ║                                                                 ║
+ * ║                                                                 ║
+ * ║     x        x        x        x                                ║
+ * ║     .        .        .        .                                ║
+ * ║     ■        ■        ■        ■                                ║
+ * ║                                                                 ║
+ * ╚═════════════════════════════════════════════════════════════════╝
+ * 
  */
+
+// Libraries  ////////////////////////////////////////////////////////////////////////////
  
 #include <Kilomux.h>              // Import class declaration
 #include <KilomuxDefs.h>          // Import Kilomux defines
@@ -13,7 +37,7 @@
 #include <Channel.h>
 #include <Screen.h>
 
-// DEFINES PARA EL RSD
+// Definitions ////////////////////////////////////////////////////////////////////////////
 
 //6 = White = ActivateSensorButtonPin
 //7 = Green = ActivateSensorLedPin
@@ -27,9 +51,7 @@
 #define PIN_B   SensorEchoPin           // Pin de arduino conectado al LED Azul
 #define PIN_W   ActivateSensorButtonPin // Pin de arduino conectado al LED Blanco
 
-#define SERIAL_COMMS
-
-// Instancias de objetos //////////////////////////////////////////////////////////////////
+// Objets /////////////////////////////////////////////////////////////////////////////////
 
 Kilomux KmShield;                                       // Objeto de la clase Kilomux
 
@@ -42,7 +64,18 @@ Channel white( PIN_W , COMMON_CATHODE , BWIDTH );
 
 Screen display( &red , &green , &blue );
 
-///////////////////////////////////////////////////////////////////////////////////////////
+// Global variables  //////////////////////////////////////////////////////////////////////
+
+unsigned int pot[8];
+unsigned int prevPot[8];
+
+bool buttonState[8];
+bool buttonLastState[8];
+char buttonPushCounter[8];   // counter for the number of button presses
+
+bool led[8];
+
+//  Beginnig  /////////////////////////////////////////////////////////////////////////////
 
 void setup() { 
   KmShield.init();                                    // Initialize Kilomux shield hardware
@@ -64,6 +97,8 @@ void setup() {
 
 }
 
+//  For ever   //////////////////////////////////////////////////////////////////////////
+
 void loop() {
   //Run the RSD engine
   rsd.update();
@@ -76,7 +111,8 @@ void loop() {
                                                              
 }
 
-//Let's draw!
+//  Let's draw! //////////////////////////////////////////////////////////////////////////
+
 void draw() {
   display.clear();
   
