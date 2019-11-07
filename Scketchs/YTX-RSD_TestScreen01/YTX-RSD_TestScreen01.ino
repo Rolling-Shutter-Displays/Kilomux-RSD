@@ -75,6 +75,7 @@ bool buttonLastState[8];
 char buttonPushCounter[8];   // counter for the number of button presses
 
 bool led[8];
+bool bloq = false;
 
 //  Beginnig  /////////////////////////////////////////////////////////////////////////////
 
@@ -94,6 +95,7 @@ void setup() {
 
   //Comunications
   Serial.begin( 9600 );
+  
 }
 
 // For ever  ///////////////////////////////////////////////////////////////////////////
@@ -105,14 +107,18 @@ void loop() {
   //Tuning: Kilomux way
   int tick = map( KmShield.analogReadKm( MUX_A, 0 ) , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
   int fine = map( KmShield.analogReadKm( MUX_A, 1 ) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
-  rsd.setTick( tick );
-  rsd.setFine( fine );
+
+  if ( !bloq ) {
+    rsd.setTick( tick );
+    rsd.setFine( fine );
+  }
                                                              
 }
 
 // Let's draw! //////////////////////////////////////////////////////////////////////////
 
 void draw() {
+  //Clear screen
   display.clear();
   
   //Standarized order of the SMPTE/EBU color bar image : https://en.wikipedia.org/wiki/SMPTE_color_bars
@@ -139,6 +145,10 @@ void draw() {
 
   //Update Km
   updateKm();
+
+  //Shift phase: Kilomux way
+  rsd.shiftPhase( map( pot[3] , 0 , 1023 , -1 , +2 ) );
+  
 }
 
 // Update Kilomux ///////////////////////////////////////////////////////////////////////
@@ -161,13 +171,16 @@ void updateKm() {
     buttonLastState[i]= buttonState[i];
   }
 
-  //Update leds
+  //Update leds and states
   for( int i = 0 ; i < 4 ; i++ ) {
     if ( buttonPushCounter[i]&1 ) {
       led[i] = HIGH;
+      if ( !i ) bloq = true;
     } else {
       led[i] = LOW;
+      if( !i ) bloq = false;
     }
     KmShield.digitalWriteKm( i + 8 , led[i] );
-  }  
+  }
+    
 }
