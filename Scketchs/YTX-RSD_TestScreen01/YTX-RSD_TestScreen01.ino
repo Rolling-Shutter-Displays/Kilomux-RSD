@@ -1,9 +1,9 @@
 /* Autor: derfaq (Facundo Daguerre) - Rolling Shutter Displays 
  * Date: 09/27/19
  */
-
- /* 
- * Layout
+ 
+/*  Layout /////////////////////////////////////////////////////////////////////////////
+ * 
  * ╔═════════════════════════════════════════════════════════════════╗
  * ║                                                                 ║
  * ║                              Param                              ║
@@ -39,10 +39,11 @@
 
 // Definitions ////////////////////////////////////////////////////////////////////////////
 
-//6 = White = ActivateSensorButtonPin
-//7 = Green = ActivateSensorLedPin
-//8 = Blue  = SensorEchoPin
-//9 = Red   = SensorTriggerPin
+// 6 = White = ActivateSensorButtonPin
+// 7 = Green = ActivateSensorLedPin
+// 8 = Blue  = SensorEchoPin
+// 9 = Red   = SensorTriggerPin
+// TODO: Pin-out
 
 #define BWIDTH 32 
 #define WIDTH ((BWIDTH*8)-1)
@@ -78,9 +79,10 @@ bool led[8];
 //  Beginnig  /////////////////////////////////////////////////////////////////////////////
 
 void setup() { 
+  //Setup of Kilomux 
   KmShield.init();                                    // Initialize Kilomux shield hardware
 
-  //Setup of the RSD 
+  //Setup of RSD 
   rsd.begin( 30 , BWIDTH );
   
   rsd.attachChannel( red );
@@ -90,20 +92,17 @@ void setup() {
 
   rsd.attachDraw( draw );
 
-  
-#if defined( SERIAL_COMMS )
-  Serial.begin( 115200 );
-#endif
-
+  //Comunications
+  Serial.begin( 9600 );
 }
 
-//  For ever   //////////////////////////////////////////////////////////////////////////
+// For ever  ///////////////////////////////////////////////////////////////////////////
 
 void loop() {
   //Run the RSD engine
   rsd.update();
   
-  // Tuning: KiloMux way
+  //Tuning: Kilomux way
   int tick = map( KmShield.analogReadKm( MUX_A, 0 ) , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
   int fine = map( KmShield.analogReadKm( MUX_A, 1 ) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
   rsd.setTick( tick );
@@ -111,7 +110,7 @@ void loop() {
                                                              
 }
 
-//  Let's draw! //////////////////////////////////////////////////////////////////////////
+// Let's draw! //////////////////////////////////////////////////////////////////////////
 
 void draw() {
   display.clear();
@@ -128,7 +127,6 @@ void draw() {
     if( 1 - i%2 ) display.line( i , WHITE );
   }
 
-#if defined(SERIAL_COMMS)
   //Serial diagnosis
   Serial.print("@frsd: ");
   Serial.print( rsd.getFrequency() , 10 );
@@ -138,5 +136,38 @@ void draw() {
   Serial.print( rsd.getTick() );
   Serial.print(" , fine: ");
   Serial.println( rsd.getFine() );
-#endif  // endif COMUNICACION_SERIAL
+
+  //Update Km
+  updateKm();
+}
+
+// Update Kilomux ///////////////////////////////////////////////////////////////////////
+
+void updateKm() {
+  //Update pot values
+  for( int i = 0 ; i < 8 ; i++ ) {
+    prevPot[i] = pot[i];
+    pot[i] = KmShield.analogReadKm( MUX_A, i );
+  }
+  
+  //Update button states
+  for( int i = 0 ; i < 8 ; i++ ) {
+    buttonState[i] = KmShield.digitalReadKm( MUX_B , i , PULLUP );
+    
+    if ( buttonState[i] != buttonLastState[i] ) {
+      if ( buttonState[i] == LOW ) buttonPushCounter[i]++;
+    }
+
+    buttonLastState[i]= buttonState[i];
+  }
+
+  //Update leds
+  for( int i = 0 ; i < 4 ; i++ ) {
+    if ( buttonPushCounter[i]&1 ) {
+      led[i] = HIGH;
+    } else {
+      led[i] = LOW;
+    }
+    KmShield.digitalWriteKm( i + 8 , led[i] );
+  }  
 }
