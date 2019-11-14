@@ -80,7 +80,7 @@ bool led[8];
 bool bloq = false;
 
 int screen = 3;
-const int screen_size = 4;
+const int screen_size = 5;
 
 uint8_t oneBitsSet[8]    = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
 uint8_t twoBitsSet[28]   = { 0x03, 0x05, 0x06, 0x09, 0x0A, 0x0C, 0x11, 0x12, 0x14, 0x18, 0x21, 0x22, 0x24, 0x28, 0x30, 0x41, 0x42, 0x44, 0x48, 0x50, 0x60, 0x81, 0x82, 0x84, 0x88, 0x90, 0xA0, 0xC0 };
@@ -223,6 +223,60 @@ void whiteNoise3() {
 
 }
 
+void dither8() {
+  //Clear screen
+  display.clear();
+  //Clear white
+  white.clear();
+
+  //Params
+  uint8_t level[4];
+  for ( int i = 0 ; i < 4 ; i++ ) {
+    level[i] = map( pot[4 + i] , 0 , 1023 , 0 , 8 );
+  }
+
+  for( int j = 0 ; j < 4 ; j++ ) {
+    
+    for( int i = 0 ; i <= BWIDTH ; i++ ) {
+    
+        switch( level[j] ) {
+          case 0:
+            *(ch[j]->get() + i) = 0x00;
+            break;
+          case 1:
+            *(ch[j]->get() + i) = oneBitsSet[ frameCount%9  ];
+            break;
+          case 2:
+            *(ch[j]->get() + i) = twoBitsSet[ frameCount%29 ];
+            break;
+          case 3:
+            *(ch[j]->get() + i) = threeBitsSet[ frameCount%57 ];
+            break;
+          case 4:
+            *(ch[j]->get() + i) = fourBitsSet[ frameCount%71 ];
+            break;
+          case 5:
+            *(ch[j]->get() + i) = ( ~threeBitsSet[ frameCount%57 ] ) & 0xFF ;
+            break;
+          case 6:
+            *(ch[j]->get() + i) = ( ~twoBitsSet[ frameCount%29 ] ) & 0xFF ;
+            break;
+          case 7:
+            *(ch[j]->get() + i) = ( ~oneBitsSet[ frameCount%9 ] ) & 0xFF;
+            break;
+          case 8:
+            *(ch[j]->get() + i) = 0xFF;
+            break;
+          default: break;   
+        }
+      }
+    }
+
+  white.fill( 0 , 7 );
+  white.clear( WIDTH - 7 , WIDTH );
+  
+}
+
 void whiteNoise4() {
   //Clear screen
   display.clear();
@@ -277,7 +331,7 @@ void whiteNoise4() {
   
 }
 
-void (*screens[])() = { testScreenRGB , whiteNoise , whiteNoise2 , whiteNoise3 , whiteNoise4 };
+void (*screens[])() = { testScreenRGB , whiteNoise , whiteNoise2 , whiteNoise3 , whiteNoise4 , dither8 };
 
 // Let's draw! //////////////////////////////////////////////////////////////////////////
 
