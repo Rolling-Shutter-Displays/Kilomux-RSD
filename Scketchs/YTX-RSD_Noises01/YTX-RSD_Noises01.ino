@@ -244,25 +244,25 @@ void dither8() {
             *(ch[j]->get() + i) = 0x00;
             break;
           case 1:
-            *(ch[j]->get() + i) = oneBitsSet[ frameCount%9  ];
+            *(ch[j]->get() + i) = oneBitsSet[ frameCount%8  ];
             break;
           case 2:
-            *(ch[j]->get() + i) = twoBitsSet[ frameCount%29 ];
+            *(ch[j]->get() + i) = twoBitsSet[ frameCount%28 ];
             break;
           case 3:
-            *(ch[j]->get() + i) = threeBitsSet[ frameCount%57 ];
+            *(ch[j]->get() + i) = threeBitsSet[ frameCount%56 ];
             break;
           case 4:
-            *(ch[j]->get() + i) = fourBitsSet[ frameCount%71 ];
+            *(ch[j]->get() + i) = fourBitsSet[ frameCount%70 ];
             break;
           case 5:
-            *(ch[j]->get() + i) = ( ~threeBitsSet[ frameCount%57 ] ) & 0xFF ;
+            *(ch[j]->get() + i) = ( ~threeBitsSet[ frameCount%56 ] ) & 0xFF ;
             break;
           case 6:
-            *(ch[j]->get() + i) = ( ~twoBitsSet[ frameCount%29 ] ) & 0xFF ;
+            *(ch[j]->get() + i) = ( ~twoBitsSet[ frameCount%28 ] ) & 0xFF ;
             break;
           case 7:
-            *(ch[j]->get() + i) = ( ~oneBitsSet[ frameCount%9 ] ) & 0xFF;
+            *(ch[j]->get() + i) = ( ~oneBitsSet[ frameCount%8 ] ) & 0xFF;
             break;
           case 8:
             *(ch[j]->get() + i) = 0xFF;
