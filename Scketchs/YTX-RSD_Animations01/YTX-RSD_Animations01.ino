@@ -14,8 +14,8 @@
  * ║     x        x        x        x                                ║
  * ║     ○        ○        ○        ○                                ║
  * ║                                                                 ║
- * ║    Bloq.     Prev     Next                                      ║
- * ║    Freq.     Button   Button   x                                ║
+ * ║    Bloq.    Play      Prev     Next                             ║
+ * ║    Freq.    Pause     Button   Button                           ║
  * ║     .        .        .        .                                ║
  * ║     ■        ■        ■        ■                                ║
  * ║                                                                 ║
@@ -75,7 +75,9 @@ bool buttonLastState[8];
 char buttonPushCounter[8];   // counter for the number of button presses
 
 bool led[8];
+
 bool bloq = false;
+bool play = false;
 
 int screen = 0;
 const int screen_size = 1;
@@ -97,7 +99,7 @@ void setup() {
   rsd.attachDraw( draw );
 
   //Comunications
-  Serial.begin( 115200 );
+  Serial.begin( 9600 );
   
 }
 
@@ -139,28 +141,33 @@ void testScreenRGB() {
   }
 }
 
-void whiteNoise() {
+void testScreenRGBW() {
   //Clear screen
   display.clear();
-  //Clear white
-  white.clear();
+  //Fill white
+  white.fill();
   
   //Standarized order of the SMPTE/EBU color bar image : https://en.wikipedia.org/wiki/SMPTE_color_bars
   //from left to right, the colors are white, yellow, cyan, green, magenta, red,  blue and black
   for( int i = 0 ; i <= WIDTH ; i++ ) {
-    if ( random( 0 , 2 ) ) white.line( i );
+    colour c = ( i * 8 ) / WIDTH;
+    display.line( i , c );
   }
 
+  //Grid resolution
+  for( int i = 0 ; i < BWIDTH/2 ; i++ ) {
+    if( 1 - i%2 ) display.line( i , WHITE );
+  }
 }
 
-void (*screens[])() = { testScreenRGB , whiteNoise };
+void (*screens[])() = { testScreenRGB , testScreenRGBW };
 
 // Let's draw! //////////////////////////////////////////////////////////////////////////
 
 void draw() {
 
   screens[screen]();
-  /*
+  
   //Serial diagnosis
   Serial.print("@frsd: ");
   Serial.print( rsd.getFrequency() , 10 );
@@ -170,9 +177,7 @@ void draw() {
   Serial.print( rsd.getTick() );
   Serial.print(" , fine: ");
   Serial.println( rsd.getFine() );
-  */
-  
-  Serial.println( frameLost );
+
   //Update Km
   updateKm();
 
@@ -200,9 +205,15 @@ void updateKm() {
       if ( buttonState[i] != buttonLastState[i] ) {
         if ( buttonState[i] == LOW ) buttonPushCounter[i]++;
       }
-      break;
+    break;
 
-    case 1: //prev Button
+    case 1 : //Bloq button
+      if ( buttonState[i] != buttonLastState[i] ) {
+        if ( buttonState[i] == LOW ) buttonPushCounter[i]++;
+      }
+    break;
+
+    case 2: //prev Button
       if ( !buttonState[i] ) {
         led[i] = HIGH;
         if ( buttonLastState[i] ) {
@@ -215,9 +226,9 @@ void updateKm() {
       } else {
         led[i] = LOW;
       }
-      break;
+    break;
 
-    case 2: //next Button
+    case 3: //next Button
       if ( !buttonState[i] ) {
         led[i] = HIGH;
         if ( buttonLastState[i] ) {
@@ -230,11 +241,10 @@ void updateKm() {
       } else {
         led[i] = LOW;
       }
-      break;
      break;
 
      default: break;
-    }
+     }
     
     buttonLastState[i]= buttonState[i];
   }
@@ -242,13 +252,23 @@ void updateKm() {
   
   //Update leds and states
   for( int i = 0 ; i < 4 ; i++ ) {
-    if ( i == 0 ) {
+    if ( i == 0  ) {
       if ( buttonPushCounter[i]&1 ) {
         led[i] = HIGH;
-        if ( !i ) bloq = true;
+        if ( !i ) bloq = true; //Que hice? con el if( !i )
       } else {
         led[i] = LOW;
         if( !i ) bloq = false;
+      }
+    }
+
+    if ( i == 1 ) {
+      if ( buttonPushCounter[i]&1 ) {
+        led[i] = HIGH;
+        play = true;
+      } else {
+        led[i] = LOW;
+        play = false;
       }
     }
     
