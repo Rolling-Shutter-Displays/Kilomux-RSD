@@ -39,6 +39,9 @@
 #include <Channel.h>
 #include <Screen.h>
 
+#include <MIDI.h>
+MIDI_CREATE_DEFAULT_INSTANCE();
+
 // Definitions ////////////////////////////////////////////////////////////////////////////
 
 // 6 = White = ActivateSensorButtonPin
@@ -121,7 +124,7 @@ void setup() {
   rsd.attachDraw( draw );
 
   //Comunications
-  Serial.begin( 115200 );
+  MIDI.begin(MIDI_CHANNEL_OMNI);
   
 }
 
@@ -131,14 +134,15 @@ void loop() {
   //Run the RSD engine
   rsd.update();
   
-  //Tuning: Kilomux way
-  int tick = map( KmShield.analogReadKm( MUX_A, 1 ) , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
-  int fine = map( KmShield.analogReadKm( MUX_A, 2 ) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
-
   if ( !bloq ) {
+    //Tuning: Kilomux way
+    int tick = map( KmShield.analogReadKm( MUX_A, 1 ) , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
+    int fine = map( KmShield.analogReadKm( MUX_A, 2 ) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
     rsd.setTick( tick );
     rsd.setFine( fine );
   }
+
+  MIDI.read();
                                                              
 }
 
@@ -152,11 +156,13 @@ void draw() {
   green.copy( &green );
   blue.copy( &blue );
   white.copy( &white );
+
+  white.line( 129 );
+  white.line( 116 );
   
   ShiftByOne( 130 , 255 );
   ShiftByOne( 115 , 0 );
 
-  colour c;
   for( int i = 0 ; i < 4 ; i++ ) {
     if( !buttonState[ i + 4 ] ) {
       ch[i]->line( 115 );
@@ -256,6 +262,39 @@ void updateKm() {
       break;
      break;
     */
+    case( 4 ):
+      if ( !buttonState[i] && buttonLastState[i] ) {
+        MIDI.sendNoteOn(42, 127, 1);
+      }
+      if( buttonState[i] && !buttonLastState[i] ){
+        MIDI.sendNoteOff(42, 0, 1);
+      }
+      break;
+    case( 5 ):
+      if ( !buttonState[i] &&  buttonLastState[i] ) {
+        MIDI.sendNoteOn(43, 127, 1);
+      } 
+      if( buttonState[i] && !buttonLastState[i] ){
+        MIDI.sendNoteOff(43, 0, 1);
+      }
+      break;
+    case( 6 ):
+      if ( !buttonState[i] && buttonLastState[i] ) {
+        MIDI.sendNoteOn(44, 127, 1);
+      } 
+      if( buttonState[i] && !buttonLastState[i] ){
+        MIDI.sendNoteOff(44, 0, 1);
+      }
+      break;
+    case( 7 ):
+      if ( !buttonState[i] && buttonLastState[i] ) {
+        MIDI.sendNoteOn(45, 127, 1);
+      } 
+      if( buttonState[i] && !buttonLastState[i] ){
+        MIDI.sendNoteOff(45, 0, 1);
+      }
+      break;
+      
      default: break;
     }
     
