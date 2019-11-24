@@ -149,72 +149,42 @@ void loop() {
                                                              
 }
 
-bool noteState[4];
+boolean isBlack[7] = { false, true, true, true, false, true , true };
+boolean notes[24];
 
 // MIDI Input  //////////////////////////////////////////////////////////////////////////
 void handleNoteOn(byte channel, byte pitch, byte velocity) {
-  if ( channel == 1 ){
-    switch( pitch ){
-    case 131:
-      noteState[0] = true;
-    break;
-    case 132:
-      noteState[1] = true;
-    break;
-    case 133:
-      noteState[2] = true;
-    break;
-    case 134:
-      noteState[3] = true;
-    break;
-    default: break;
-  }
-  }
+    notes[pitch%24] = true;
 }
 
-void handleNoteOff(byte channel, byte pitch, byte velocity)
-{ 
-  if ( channel == 1 ) {
-    switch( pitch ) {
-    case 131:
-      noteState[0] = false;
-    break;
-    case 132:
-      noteState[1] = false;
-    break;
-    case 133:
-      noteState[2] = false;
-    break;
-    case 134:
-      noteState[3] = false;
-    break;
-    default: break;
-    }
-  }
+void handleNoteOff(byte channel, byte pitch, byte velocity) {
+    notes[pitch%24] = false;
 }
 
 // Let's draw! //////////////////////////////////////////////////////////////////////////
 
-colour palette[3] =  { BLACK , BLUE , MAGENTA };
+//colour palette[3] =  { BLACK , BLUE , MAGENTA };
 
 void draw() {
-  //Copy background
-  red.copy( &red );
-  green.copy( &green );
-  blue.copy( &blue );
-  white.copy( &white );
-
-  white.line( 130 );
-  white.line( 124 );
   
-  ShiftByOne( 134 , 255 );
-  ShiftByOne( 120 , 0 );
+  white.clear();
 
-  for( int i = 0 ; i < 4 ; i++ ) {
-    if( ( !buttonState[ i + 4 ] ) || ( noteState[i] ) ) {
-      ch[i]->line( 120 );
-      ch[i]->line( 134 );
+  int stroke = 2;
+  int note = 0;
+  
+  for( int i = 0 ; i < 14 ; i++ ) {
+    colour c;
+    //whites
+    if( notes[note] ){ c = BLACK ; } else { c = WHITE; }
+    white.fill( (WIDTH*i/14) + stroke , (WIDTH*(i + 1))/14 - stroke , c ); //Multiply first, then divide
+
+    //Blacks
+    if ( isBlack[i%7] ) {
+      note++;
+      if( notes[note] ){ c = WHITE ; } else { c = BLACK; }
+      white.fill( (WIDTH*i/14) - WIDTH/48 , (WIDTH*i/14) + WIDTH/48 , c );
     }
+    note++;
   }
   
   //Update Km
@@ -222,32 +192,6 @@ void draw() {
 
   //Shift phase: Kilomux way
   rsd.shiftPhase( map( pot[3] , 0 , 1023 , -1 , +2 ) );
-  
-}
-
-void ShiftByOne( int begin , int end ) {
-  
-  if( begin > end ) { //Shift Right
-    int i = end;
-    do {
-      display.line( i , display.get( i + 1 ) );
-      white.line( i , (int)white.get( i + 1 ) );
-      i++;
-    } while ( i < begin );
-    display.line( begin , BLACK );
-    white.line( begin , BLACK );
-  }
-
-  if( begin < end ) { //Shift Left
-    int i = end;
-    do {
-      display.line( i , display.get( i - 1 ) );
-      white.line( i , (int)white.get( i - 1 ) );
-      i--;
-    } while ( i > begin );
-    display.line( begin ,  BLACK );
-    white.line( begin ,  BLACK );
-  }
   
 }
 
