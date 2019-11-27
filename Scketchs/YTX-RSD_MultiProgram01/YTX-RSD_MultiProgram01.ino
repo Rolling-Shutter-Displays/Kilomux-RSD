@@ -121,7 +121,7 @@ void setup() {
   rsd.attachDraw( draw );
 
   //Comunications
-  Serial.begin( 115200 );
+  //Serial.begin( 115200 );
   
 }
 
