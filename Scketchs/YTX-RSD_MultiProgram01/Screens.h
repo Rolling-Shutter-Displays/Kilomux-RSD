@@ -33,19 +33,24 @@ void testScreenMono() {
   display.clear();
   white.clear();
   
-  white.fill( 0 , WIDTH/4 );
+  int channel = pot[0] >> 8 ;
+  
+  ch[channel]->clear();
+  
+  ch[channel]->fill( 0 , WIDTH/4 );
 
+  
   for( int i = 1 ; i < (WIDTH/4) ; i++ ) {
     int val = (WIDTH/4)/i;
     if ( i%2 ) {
-      white.clear( WIDTH/2 -val, WIDTH/2 + val);
+      ch[channel]->clear( WIDTH/2 -val, WIDTH/2 + val);
     } else {
-      white.fill( WIDTH/2 - val, WIDTH/2 + val);
+      ch[channel]->fill( WIDTH/2 - val, WIDTH/2 + val);
     }
   }
 
   for( int i = 0 ; i < WIDTH/4 ; i++ ) {
-    if( i%2 ) white.line( WIDTH - i );
+    if( i%2 ) ch[channel]->line( WIDTH - i );
   }
 }
 
