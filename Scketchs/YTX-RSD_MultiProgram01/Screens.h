@@ -27,6 +27,28 @@ void dither( int x0 , int x1 , Channel ch ) {
 */
 }
 
+void ShiftByOne( int begin , int end , Channel *ch) {
+  
+  if( begin > end ) { //Shift Right
+    int i = end;
+    do {
+      ch->line( i , display.get( i + 1 ) );
+      i++;
+    } while ( i < begin );
+    ch->line( begin , BLACK );
+  }
+
+  if( begin < end ) { //Shift Left
+    int i = end;
+    do {
+      ch->line( i , display.get( i - 1 ) );
+      i--;
+    } while ( i > begin );
+    ch->line( begin ,  BLACK );
+  }
+  
+}
+
 // Screens //////////////////////////////////////////////////////////////////////////////
 
 void testScreenMono() {
@@ -181,7 +203,26 @@ void prideFlag() {
   }
 }
 
+/*
+boolean channelStateShifty[4];
 
+void updateKmShifty() {
+  
+}
+
+void shifty() {
+  
+  red.copy( &red );
+  green.copy( &green );
+  blue.copy( &blue );
+  
+  ShiftByOne( 130 , 255 );
+  ShiftByOne( 115 , 0 );
+  colour c = palette[(int)random(3)];
+  display.line( 115 , c );
+  display.line( 130 , c );
+}
+*/
 
 void (*screens[])() = { testScreenMono , testScreenRGB , whiteNoise , prideFlag };
 

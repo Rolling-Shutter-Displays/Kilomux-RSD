@@ -161,31 +161,70 @@ void draw() {
 // Update Kilomux ///////////////////////////////////////////////////////////////////////
 
 void updateKm() {
-  //Update pot values
+  //Update pots
   for( int i = 0 ; i < 8 ; i++ ) {
     prevPot[i] = pot[i];
     pot[i] = KmShield.analogReadKm( MUX_A, i );
   }
   
-  //Update button states
+  //Update buttons
   for( int i = 0 ; i < 8 ; i++ ) {
     buttonState[i] = KmShield.digitalReadKm( MUX_B , i , PULLUP );
+
+    //Click detection
+    if ( ( buttonState[i] == LOW ) && ( buttonLastState[i] == HIGH ) ) {
+        buttonPushCounter[i]++;
+    }
+
+    //Release detection
+    /*
+    if ( ( buttonState[i] == LOW ) && ( buttonLastState[i] == HIGH ) ) {
+        //buttonPushCounter[i]++;
+    }
+    */
+
+    //Updete states
+    updateStateMainControl();
     
-    switch ( i ) {
+    buttonLastState[i]= buttonState[i];
+  }
 
-    case 0 : //Bloq button
-      if ( buttonState[i] != buttonLastState[i] ) {
-        if ( buttonState[i] == LOW ) buttonPushCounter[i]++;
-      }
+  
+  //Update leds
+  for( int i = 0 ; i < 4 ; i++ ) {
+    KmShield.digitalWriteKm( i + 8 , led[i] );
+  }
+
+}
+
+void updateStateMainControl() {
+
+  for( int i = 0 ; i < 4 ; i++ ) {
+    switch( i ) {
+      //Button 0 = Bloq Freq
+      case 0: 
+        if ( buttonPushCounter[0]&1 ) {
+          led[0] = HIGH;
+          bloq = true;
+        } else {
+          led[0] = LOW;
+          bloq = false;
+        }
       break;
-
-    case 1 : //Play-pause button
-      if ( buttonState[i] != buttonLastState[i] ) {
-        if ( buttonState[i] == LOW ) buttonPushCounter[i]++;
-      }
+      
+      //Button 1 = Play/Pause
+      case 1: 
+        if ( buttonPushCounter[1]&1 ) {
+          led[1] = HIGH;
+          pause = true;
+        } else {
+          led[1] = LOW;
+          pause = false;
+        }
       break;
-
-    case 2: //prev Button
+      
+      //Button 2 = Prev Button
+      case 2:
       if ( !buttonState[i] ) {
         led[i] = HIGH;
         if ( buttonLastState[i] ) {
@@ -199,51 +238,24 @@ void updateKm() {
         led[i] = LOW;
       }
       break;
-
-    case 3: //next Button
-      if ( !buttonState[i] ) {
-        led[i] = HIGH;
-        if ( buttonLastState[i] ) {
-          if ( screen < screen_size ) {
-            screen++;
-          } else {
-            screen = 0;
+      
+      //Button 3 = Next Button
+      case 3: //next Button
+        if ( !buttonState[i] ) {
+          led[i] = HIGH;
+          if ( buttonLastState[i] ) {
+            if ( screen < screen_size ) {
+              screen++;
+            } else {
+              screen = 0;
+            }
           }
+        } else {
+          led[i] = LOW;
         }
-      } else {
-        led[i] = LOW;
-      }
       break;
-     break;
-
-     default: break;
+      
+      default: break;
     }
-    
-    buttonLastState[i]= buttonState[i];
-  }
-
-  
-  //Update leds and states
-  for( int i = 0 ; i < 4 ; i++ ) {
-    if ( i == 0 ) {
-      if ( buttonPushCounter[i]&1 ) {
-        led[i] = HIGH;
-        bloq = true;
-      } else {
-        led[i] = LOW;
-        bloq = false;
-      }
-    }
-
-    if ( i == 1 ) {
-      if ( buttonPushCounter[i]&1 ) {
-        led[i] = HIGH;
-        pause = true;
-      } else {
-        led[i] = LOW;
-        pause = false;
-      }
-    }
-    KmShield.digitalWriteKm( i + 8 , led[i] );
   }
 }
