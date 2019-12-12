@@ -62,6 +62,39 @@ void ShiftByOne( int begin , int end , Channel *ch) {
 
 // Screens //////////////////////////////////////////////////////////////////////////////
 
+
+struct Program {
+  virtual void draw() {}
+  virtual void updateState() {}
+
+};
+
+struct TestScreenMonoS : Program {
+  void draw() {
+    display.clear();
+    white.clear();
+    red.fill( 0 , WIDTH/2 );
+  }
+  void updateState() {
+    led[4] = HIGH;
+  }
+} testScreenMonoS;
+
+struct TestScreenMonoT : Program {
+  void draw() {
+    display.clear();
+    white.clear();
+    blue.fill( 0 , WIDTH/2 );
+  }
+  void updateState() {
+    led[4] = LOW;
+  }
+} testScreenMonoT;
+
+
+Program* programs[2] = { &testScreenMonoS , &testScreenMonoT };
+const int programs_size = 1;
+
 void testScreenMono() {
   display.clear();
   white.clear();
@@ -238,4 +271,4 @@ void shifty() {
 void (*screens[])() = { testScreenMono , testScreenRGB , whiteNoise , prideFlag };
 
 int screen = 0;
-const int screen_size = 3;
+const int screen_size = 1;
