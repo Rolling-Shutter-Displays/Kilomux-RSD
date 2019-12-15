@@ -6,8 +6,8 @@
  * 
  * ╔═════════════════════════════════════════════════════════════════╗
  * ║                                                                 ║
- * ║   Main     Sintonía                                             ║
- * ║   Param    Gruesa   Fina     Shift                              ║
+ * ║   Sintonía                                                      ║
+ * ║   Gruesa   Fina     Shift    HBlank                             ║
  * ║     ○        ○        ○        ○                                ║
  * ║    p[0]     p[1]     p[2]     p[3]              RSD             ║
  * ║   Param    Param    Param    Param               ☼              ║
@@ -15,8 +15,8 @@
  * ║     ○        ○        ○        ○                                ║
  * ║    p[5]     p[6]     p[7]     p[8]                              ║
  * ║                                                                 ║
- * ║    Bloq.    Play     Prev     Next                              ║
- * ║    Freq.    Pause    Button   Button                            ║
+ * ║    On/      Bloq.    Play     Next                              ║
+ * ║    Off      Freq.    Pause    Button                            ║
  * ║     .        .        .        .                                ║
  * ║     ■        ■        ■        ■                                ║
  * ║   ¿Save      MIDI                 } Hold States ?               ║
@@ -80,6 +80,8 @@ char buttonPushCounter[8];   // counter for the number of button presses
 
 bool led[8];
 
+// States
+bool off = false;
 bool bloq = false;
 bool pause = false;
 
@@ -146,12 +148,9 @@ void loop() {
 
 void draw() {
 
-  //screens[screen]();
-
   programs[screen]->draw();
   
-  //Serial.println( frameLost );
-  if ( pot[3] < 512 ) {
+  if ( off ) {
     display.clear();
     white.clear();
   }
@@ -161,8 +160,6 @@ void draw() {
 
   //Shift phase: Kilomux way
   rsd.shiftPhase( map( pot[2] , 0 , 1023 , -1 , +2 ) );
-
-  
   
 }
 
@@ -211,49 +208,48 @@ void updateStateMainControl() {
 
   for( int i = 0 ; i < 4 ; i++ ) {
     switch( i ) {
-      //Button 0 = Bloq Freq
+
+      //Button 0 = On/Off
       case 0: 
         if ( buttonPushCounter[0]&1 ) {
           led[0] = HIGH;
-          bloq = true;
+          off = true;
         } else {
           led[0] = LOW;
+          off = false;
+        }
+      break;
+      
+      //Button 1 = Bloq Freq
+      case 1: 
+        if ( buttonPushCounter[1]&1 ) {
+          led[1] = HIGH;
+          bloq = true;
+        } else {
+          led[1] = LOW;
           bloq = false;
         }
       break;
       
-      //Button 1 = Play/Pause
-      case 1: 
-        if ( buttonPushCounter[1]&1 ) {
-          led[1] = HIGH;
+      //Button 2 = Play/Pause
+      case 2: 
+        if ( buttonPushCounter[2]&1 ) {
+          led[2] = HIGH;
           pause = true;
         } else {
-          led[1] = LOW;
+          led[2] = LOW;
           pause = false;
         }
       break;
-      
-      //Button 2 = Prev Button
-      case 2:
-      if ( !buttonState[i] ) {
-        led[i] = HIGH;
-        if ( buttonLastState[i] ) {
-          
-          if ( screen > 0 ) {
-            screen--;
-          } else {
-            screen = screen_size;
-          }
-        }
-      } else {
-        led[i] = LOW;
-      }
-      break;
-      
+         
       //Button 3 = Next Button
       case 3: //next Button
         if ( !buttonState[i] ) {
           led[i] = HIGH;
+
+          display.clear();
+          white.clear();
+          
           if ( buttonLastState[i] ) {
             if ( screen < screen_size ) {
               screen++;

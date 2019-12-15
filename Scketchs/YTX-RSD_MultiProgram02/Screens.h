@@ -1,15 +1,4 @@
 // Utils ///////////////////////////////////////////////////////////////////////////////
-
-struct Shifty { 
-    int roll; 
-    display(int x) 
-    { 
-        roll = x; 
-    }
-    updateState()
-    {
-    }
-} shifty; 
  
 void dither( int x0 , int x1 , Channel ch ) {
   if ( x1 > x0 ) {  
@@ -43,19 +32,19 @@ void ShiftByOne( int begin , int end , Channel *ch) {
   if( begin > end ) { //Shift Right
     int i = end;
     do {
-      ch->line( i , display.get( i + 1 ) );
+      ( ch->get( i + 1 ) ) ? ch->line( i ) : ch->clear( i ) ;
       i++;
     } while ( i < begin );
-    ch->line( begin , BLACK );
+    ch->clear( begin );
   }
 
   if( begin < end ) { //Shift Left
     int i = end;
     do {
-      ch->line( i , display.get( i - 1 ) );
+      ( ch->get( i - 1 ) ) ? ch->line( i ) : ch->clear( i ) ;
       i--;
     } while ( i > begin );
-    ch->line( begin ,  BLACK );
+    ch->clear( begin );
   }
   
 }
@@ -66,7 +55,6 @@ void ShiftByOne( int begin , int end , Channel *ch) {
 struct Program {
   virtual void draw() {}
   virtual void updateState() {}
-
 };
 
 struct TestScreenMonoS : Program {
@@ -91,9 +79,52 @@ struct TestScreenMonoT : Program {
   }
 } testScreenMonoT;
 
+colour palette2[3] =  { BLACK , BLUE , MAGENTA };
 
-Program* programs[2] = { &testScreenMonoS , &testScreenMonoT };
-const int programs_size = 1;
+struct MirrorShift : Program {
+  //unsigned int param[4];
+  bool channelActive[4];
+  
+  void draw() {
+    //Copy background
+    red.copy( &red );
+    green.copy( &green );
+    blue.copy( &blue );
+    white.copy( &white );
+
+    
+    for( int i = 0 ; i < 4 ; i++ ) {
+      
+      ShiftByOne( 130 , 255 , ch[i] );
+      ShiftByOne( 125 , 0 , ch[i] );
+    
+      if ( channelActive[i] ) {
+        if ( !(int)random(3) ) {
+          ch[i]->line( 125 );
+          ch[i]->line( 130 );
+        }
+      }
+    }
+    
+  }
+  
+  void updateState() {
+    for( int i = 4 ; i < 8 ; i++ ) {
+      if ( buttonPushCounter[i]&1 ) {
+          led[i] = HIGH;
+          channelActive[i-4] = true;
+        } else {
+          led[i] = LOW;
+          channelActive[i-4] = false;
+        }
+    }
+  }
+  
+} mirrorShift;
+
+
+Program* programs[3] = { &testScreenMonoS , &testScreenMonoT , &mirrorShift };
+const int programs_size = 2;
 
 void testScreenMono() {
   display.clear();
@@ -271,4 +302,4 @@ void shifty() {
 void (*screens[])() = { testScreenMono , testScreenRGB , whiteNoise , prideFlag };
 
 int screen = 0;
-const int screen_size = 1;
+const int screen_size = 2;
