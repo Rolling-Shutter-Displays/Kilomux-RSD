@@ -235,10 +235,10 @@ void updateStateMainControl() {
       case 2: 
         if ( buttonPushCounter[2]&1 ) {
           led[2] = HIGH;
-          pause = true;
+          programs[screen]->pause();
         } else {
           led[2] = LOW;
-          pause = false;
+          programs[screen]->play();
         }
       break;
          

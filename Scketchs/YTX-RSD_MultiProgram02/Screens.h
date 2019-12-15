@@ -55,6 +55,8 @@ void ShiftByOne( int begin , int end , Channel *ch) {
 struct Program {
   virtual void draw() {}
   virtual void updateState() {}
+  virtual void pause() {}
+  virtual void play() {}
 };
 
 struct TestScreenMonoS : Program {
@@ -84,6 +86,7 @@ colour palette2[3] =  { BLACK , BLUE , MAGENTA };
 struct MirrorShift : Program {
   //unsigned int param[4];
   bool channelActive[4];
+  bool pauseProgram = false;
   
   void draw() {
     //Copy background
@@ -92,6 +95,7 @@ struct MirrorShift : Program {
     blue.copy( &blue );
     white.copy( &white );
 
+    if ( !pauseProgram ) {
     
     for( int i = 0 ; i < 4 ; i++ ) {
       
@@ -106,6 +110,8 @@ struct MirrorShift : Program {
       }
     }
     
+    }
+    
   }
   
   void updateState() {
@@ -118,6 +124,14 @@ struct MirrorShift : Program {
           channelActive[i-4] = false;
         }
     }
+  }
+
+  void pause() {
+    pauseProgram = true;
+  }
+
+  void play() {
+    pauseProgram = false;
   }
   
 } mirrorShift;
