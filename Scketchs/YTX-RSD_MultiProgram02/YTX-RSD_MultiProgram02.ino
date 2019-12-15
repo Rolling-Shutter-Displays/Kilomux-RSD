@@ -71,14 +71,14 @@ Channel *ch[4] = { &red , &green , &blue , &white  };
 
 // Global variables  //////////////////////////////////////////////////////////////////////
 
-unsigned int pot[8];
-unsigned int prevPot[8];
+unsigned int pot[4];
+unsigned int prevPot[4];
 
-bool buttonState[8];
-bool buttonLastState[8];
-char buttonPushCounter[8];   // counter for the number of button presses
+bool buttonState[4];
+bool buttonLastState[4];
+char buttonPushCounter[4];   // counter for the number of button presses
 
-bool led[8];
+bool led[4];
 
 // States
 bool bloq = false;
@@ -147,7 +147,7 @@ void loop() {
 
 void draw() {
 
-  programs[screen]->draw();
+  programs[program]->draw();
   
   //Update Km
   updateKm();
@@ -160,79 +160,55 @@ void draw() {
 // Update Kilomux ///////////////////////////////////////////////////////////////////////
 
 void updateKm() {
-  //Update pots
-  for( int i = 0 ; i < 8 ; i++ ) {
-    prevPot[i] = pot[i];
-    pot[i] = KmShield.analogReadKm( MUX_A, i );
-  }
   
-  //Update buttons
-  for( int i = 0 ; i < 8 ; i++ ) {
+  // Update general RSD controls //
+  
+  for( int i = 0 ; i < 4 ; i++ ) {
+    //Update pots
+    pot[i] = KmShield.analogReadKm( MUX_A, i );
+  
+    //Update buttons
     buttonState[i] = KmShield.digitalReadKm( MUX_B , i , PULLUP );
 
+    //Updete states
+    
     //Click detection
     if ( ( buttonState[i] == LOW ) && ( buttonLastState[i] == HIGH ) ) {
         buttonPushCounter[i]++;
     }
 
-    //Release detection
-    /*
-    if ( ( buttonState[i] == LOW ) && ( buttonLastState[i] == HIGH ) ) {
-        //buttonPushCounter[i]++;
-    }
-    */
-
-    //Updete states
-    updateStateMainControl();
-    
-    programs[screen]->updateState();
-    
-    buttonLastState[i]= buttonState[i];
-  }
-
-  
-  //Update leds
-  for( int i = 0 ; i < 8 ; i++ ) {
-    KmShield.digitalWriteKm( i + 8 , led[i] );
-  }
-
-}
-
-void updateStateMainControl() {
-
-  for( int i = 0 ; i < 4 ; i++ ) {
     switch( i ) {
 
       //Button 0 = On/Off
       case 0: 
-        if ( buttonPushCounter[0]&1 ) {
-          led[0] = HIGH;
+        if ( buttonPushCounter[i]&1 ) {
+          led[i] = HIGH;
           rsd.switchOff();
         } else {
-          led[0] = LOW;
+          led[i] = LOW;
           rsd.switchOn();
         }
       break;
       
       //Button 1 = Bloq Freq
       case 1: 
-        if ( buttonPushCounter[1]&1 ) {
-          led[1] = HIGH;
+        if ( buttonPushCounter[i]&1 ) {
+          led[i] = HIGH;
           bloq = true;
         } else {
-          led[1] = LOW;
+          led[i] = LOW;
           bloq = false;
         }
       break;
       
       //Button 2 = Play/Pause
       case 2: 
-        if ( buttonPushCounter[2]&1 ) {
-          led[2] = HIGH;
-          programs[screen]->pause();
+        if ( buttonPushCounter[i]&1 ) {
+          led[i] = HIGH;
+          programs[program]->pause();
         } else {
-          led[2] = LOW;
-          programs[screen]->play();
+          led[i] = LOW;
+          programs[program]->play();
         }
       break;
          
@@ -245,10 +221,10 @@ void updateStateMainControl() {
           white.clear();
           
           if ( buttonLastState[i] ) {
-            if ( screen < screen_size ) {
-              screen++;
+            if ( program < program_size ) {
+              program++;
             } else {
-              screen = 0;
+              program = 0;
             }
           }
         } else {
@@ -258,5 +234,32 @@ void updateStateMainControl() {
       
       default: break;
     }
+
+    //Save lectures
+    prevPot[i] = pot[i];
+    buttonLastState[i]= buttonState[i];
+
+    //Update leds
+    KmShield.digitalWriteKm( i + 8 , led[i] );
   }
+
+  // Update programs controls //
+  for( int i = 0 ; i < 4 ; i++ ) {
+    //Update pots
+    programs[program]->pot[i] = KmShield.analogReadKm( MUX_A , i + 4 );
+
+    //Update buttons
+    programs[program]->buttonState[i] = KmShield.digitalReadKm( MUX_B , i + 4 , PULLUP );
+
+  }
+
+  //Update states program
+  programs[program]->updateState();
+
+
+  //Update leds 
+  for( int i = 0 ; i < 4 ; i++ ) {
+    KmShield.digitalWriteKm( i + 12 , programs[program]->led[i] );   
+  }
+
 }

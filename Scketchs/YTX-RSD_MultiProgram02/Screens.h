@@ -53,6 +53,15 @@ void ShiftByOne( int begin , int end , Channel *ch) {
 
 
 struct Program {
+  unsigned int pot[4];
+  unsigned int prevPot[4];
+
+  bool buttonState[4];
+  bool buttonLastState[4];
+  char buttonPushCounter[4];   // counter for the number of button presses
+
+  bool led[4];
+  
   virtual void draw() {}
   virtual void updateState() {}
   virtual void pause() {}
@@ -89,15 +98,25 @@ struct TestScreenMono : Program {
   }
   
   void updateState() {
-    for( int i = 4 ; i < 8 ; i++ ) {
+    for( int i = 0 ; i < 4 ; i++ ) {
+      //Click detection
+      if ( ( buttonState[i] == LOW ) && ( buttonLastState[i] == HIGH ) ) {
+        buttonPushCounter[i]++;
+      }
+    
       if ( buttonPushCounter[i]&1 ) {
           led[i] = HIGH;
-          channelActive[i-4] = true;
+          channelActive[i] = true;
         } else {
           led[i] = LOW;
-          channelActive[i-4] = false;
+          channelActive[i] = false;
         }
+
+      //Save lectures
+      prevPot[i] = pot[i];
+      buttonLastState[i]= buttonState[i];
     }
+    
   }
   
   
@@ -135,14 +154,22 @@ struct MirrorShift : Program {
   }
   
   void updateState() {
-    for( int i = 4 ; i < 8 ; i++ ) {
+    for( int i = 0 ; i < 4 ; i++ ) {
+      //Click detection
+      if ( ( buttonState[i] == LOW ) && ( buttonLastState[i] == HIGH ) ) {
+        buttonPushCounter[i]++;
+      }
       if ( buttonPushCounter[i]&1 ) {
           led[i] = HIGH;
-          channelActive[i-4] = true;
+          channelActive[i] = true;
         } else {
           led[i] = LOW;
-          channelActive[i-4] = false;
+          channelActive[i] = false;
         }
+      
+      //Save lectures
+      prevPot[i] = pot[i];
+      buttonLastState[i]= buttonState[i];
     }
   }
 
@@ -158,34 +185,11 @@ struct MirrorShift : Program {
 
 
 Program* programs[2] = { &testScreenMono , &mirrorShift };
-const int programs_size = 1;
 
-/*
-void testScreenMono() {
-  display.clear();
-  white.clear();
-  
-  int channel = pot[0] >> 8 ;
-  
-  ch[channel]->clear();
-  
-  ch[channel]->fill( 0 , WIDTH/4 );
+int program = 0;
+const int program_size = 1;
 
-  
-  for( int i = 1 ; i < (WIDTH/4) ; i++ ) {
-    int val = (WIDTH/4)/i;
-    if ( i%2 ) {
-      ch[channel]->clear( WIDTH/2 -val, WIDTH/2 + val);
-    } else {
-      ch[channel]->fill( WIDTH/2 - val, WIDTH/2 + val);
-    }
-  }
 
-  for( int i = 0 ; i < WIDTH/4 ; i++ ) {
-    if( i%2 ) ch[channel]->line( WIDTH - i );
-  }
-}
-*/
 
 void testScreenRGB() {
   //Clear screen
@@ -313,29 +317,3 @@ void prideFlag() {
     }
   }
 }
-
-/*
-boolean channelStateShifty[4];
-
-void updateKmShifty() {
-  
-}
-
-void shifty() {
-  
-  red.copy( &red );
-  green.copy( &green );
-  blue.copy( &blue );
-  
-  ShiftByOne( 130 , 255 );
-  ShiftByOne( 115 , 0 );
-  colour c = palette[(int)random(3)];
-  display.line( 115 , c );
-  display.line( 130 , c );
-}
-*/
-
-// void (*screens[])() = { testScreenMono , testScreenRGB , whiteNoise , prideFlag };
-
-int screen = 0;
-const int screen_size = 1;
