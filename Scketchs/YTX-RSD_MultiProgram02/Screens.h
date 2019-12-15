@@ -95,11 +95,11 @@ struct MirrorShift : Program {
     
     for( int i = 0 ; i < 4 ; i++ ) {
       
-      ShiftByOne( 130 , 255 , ch[i] );
-      ShiftByOne( 125 , 0 , ch[i] );
+      ShiftByOne( 130 , 253 , ch[i] );
+      ShiftByOne( 125 , 2 , ch[i] );
     
       if ( channelActive[i] ) {
-        if ( !(int)random(3) ) {
+        if ( !(int)random( pot[i+4]>>7 ) ) {
           ch[i]->line( 125 );
           ch[i]->line( 130 );
         }
