@@ -9,11 +9,11 @@
  * ║   Sintonía                                                      ║
  * ║   Gruesa   Fina     Shift    HBlank                             ║
  * ║     ○        ○        ○        ○                                ║
- * ║    p[0]     p[1]     p[2]     p[3]              RSD             ║
+ * ║                                                 RSD             ║
  * ║   Param    Param    Param    Param               ☼              ║
  * ║     x        x        x        x                                ║
  * ║     ○        ○        ○        ○                                ║
- * ║    p[5]     p[6]     p[7]     p[8]                              ║
+ * ║                                                                 ║
  * ║                                                                 ║
  * ║    On/      Bloq.    Play     Next                              ║
  * ║    Off      Freq.    Pause    Button                            ║
@@ -84,9 +84,9 @@ bool led[4];
 bool bloq = false;
 bool pause = false;
 
-// Screens  ///////////////////////////////////////////////////////////////////////////////
+// Programs  ///////////////////////////////////////////////////////////////////////////////
 
-#include "Screens.h"
+#include "Programs.h"
 
 //  Beginnig  /////////////////////////////////////////////////////////////////////////////
 

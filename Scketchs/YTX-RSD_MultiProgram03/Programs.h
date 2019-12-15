@@ -183,13 +183,71 @@ struct MirrorShift : Program {
   
 } mirrorShift;
 
+struct Paint : Program {
+  
+  bool channelActive[4];
+  bool pauseProgram = false;
+  
+  void draw() {
+    //Copy background
+    red.copy( &red );
+    green.copy( &green );
+    blue.copy( &blue );
+    
+    white.clear();
 
-Program* programs[2] = { &testScreenMono , &mirrorShift };
+    if ( !pauseProgram ) {  
+      if ( (frameCount%15) < 7 )  white.line( pot[4]>>2 );
+    }
+  }
+  
+  void updateState() {
+    //RGB Buttons
+    for( int i = 0 ; i < 3 ; i++ ) {
+      if( !buttonState[i] ) {
+        led[i] = HIGH;
+        if( buttonLastState[i] ) { 
+          ch[i]->line( pot[0]>>2 ); // rising edge
+        } else {
+          ch[i]->fill( prevPot[0]>>2 , pot[0]>>2 ); // high state
+        }
+      } else {
+        led[i] = LOW;
+      }
+    }
+    // Clear button = White button
+    if( !buttonState[3] ) {
+      led[3] = HIGH;
+      if( buttonLastState[3] ) { 
+        display.clearSafe( pot[0]>>2 ); // rising edge
+      } else {
+        display.clearSafe( prevPot[0]>>2 , pot[0]>>2 ); // high state
+      }
+    } else {
+      led[3] = LOW;
+    }
+      
+    //Save lectures
+    for( int i = 0 ; i < 4 ; i++ ) {
+      prevPot[i] = pot[i];
+      buttonLastState[i]= buttonState[i];
+    }
+  }
+
+  void pause() {
+    pauseProgram = true;
+  }
+
+  void play() {
+    pauseProgram = false;
+  }
+  
+} paint;
+
+Program* programs[3] = { &testScreenMono , &paint , &mirrorShift };
 
 int program = 0;
-const int program_size = 1;
-
-
+const int program_size = 2;
 
 void testScreenRGB() {
   //Clear screen
