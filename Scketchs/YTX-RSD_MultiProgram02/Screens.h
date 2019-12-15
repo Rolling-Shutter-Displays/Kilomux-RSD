@@ -59,32 +59,52 @@ struct Program {
   virtual void play() {}
 };
 
-struct TestScreenMonoS : Program {
+struct TestScreenMono : Program {
+  bool channelActive[4];
+  
   void draw() {
     display.clear();
     white.clear();
-    red.fill( 0 , WIDTH/2 );
-  }
-  void updateState() {
-    led[4] = HIGH;
-  }
-} testScreenMonoS;
+  
+    for( int channel = 0 ; channel < 4 ; channel++ ) { 
+      if( channelActive[ channel ] ) {
+        
+        ch[ channel ]->fill( 0 , WIDTH/4 );
 
-struct TestScreenMonoT : Program {
-  void draw() {
-    display.clear();
-    white.clear();
-    blue.fill( 0 , WIDTH/2 );
-  }
-  void updateState() {
-    led[4] = LOW;
-  }
-} testScreenMonoT;
+        for( int i = 1 ; i < (WIDTH/4) ; i++ ) {
+          int val = (WIDTH/4)/i;
+          if ( i%2 ) {
+            ch[ channel ]->clear( WIDTH/2 -val, WIDTH/2 + val);
+          } else {
+            ch[ channel ]->fill( WIDTH/2 - val, WIDTH/2 + val);
+          }
+        }
 
-colour palette2[3] =  { BLACK , BLUE , MAGENTA };
+        for( int i = 0 ; i < WIDTH/4 ; i++ ) {
+          if( i%2 ) ch[ channel ]->line( WIDTH - i );
+        }
+      }
+    }
+    
+  }
+  
+  void updateState() {
+    for( int i = 4 ; i < 8 ; i++ ) {
+      if ( buttonPushCounter[i]&1 ) {
+          led[i] = HIGH;
+          channelActive[i-4] = true;
+        } else {
+          led[i] = LOW;
+          channelActive[i-4] = false;
+        }
+    }
+  }
+  
+  
+} testScreenMono;
 
 struct MirrorShift : Program {
-  //unsigned int param[4];
+  
   bool channelActive[4];
   bool pauseProgram = false;
   
@@ -137,9 +157,10 @@ struct MirrorShift : Program {
 } mirrorShift;
 
 
-Program* programs[3] = { &testScreenMonoS , &testScreenMonoT , &mirrorShift };
-const int programs_size = 2;
+Program* programs[2] = { &testScreenMono , &mirrorShift };
+const int programs_size = 1;
 
+/*
 void testScreenMono() {
   display.clear();
   white.clear();
@@ -164,6 +185,7 @@ void testScreenMono() {
     if( i%2 ) ch[channel]->line( WIDTH - i );
   }
 }
+*/
 
 void testScreenRGB() {
   //Clear screen
@@ -313,7 +335,7 @@ void shifty() {
 }
 */
 
-void (*screens[])() = { testScreenMono , testScreenRGB , whiteNoise , prideFlag };
+// void (*screens[])() = { testScreenMono , testScreenRGB , whiteNoise , prideFlag };
 
 int screen = 0;
-const int screen_size = 2;
+const int screen_size = 1;
