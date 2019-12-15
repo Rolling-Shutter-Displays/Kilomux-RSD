@@ -81,7 +81,6 @@ char buttonPushCounter[8];   // counter for the number of button presses
 bool led[8];
 
 // States
-bool off = false;
 bool bloq = false;
 bool pause = false;
 
@@ -150,11 +149,6 @@ void draw() {
 
   programs[screen]->draw();
   
-  if ( off ) {
-    display.clear();
-    white.clear();
-  }
-  
   //Update Km
   updateKm();
 
@@ -213,10 +207,10 @@ void updateStateMainControl() {
       case 0: 
         if ( buttonPushCounter[0]&1 ) {
           led[0] = HIGH;
-          off = true;
+          rsd.switchOff();
         } else {
           led[0] = LOW;
-          off = false;
+          rsd.switchOn();
         }
       break;
       
