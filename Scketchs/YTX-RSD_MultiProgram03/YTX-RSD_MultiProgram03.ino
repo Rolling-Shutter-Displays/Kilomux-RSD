@@ -226,6 +226,7 @@ void updateKm() {
             } else {
               program = 0;
             }
+            programs[program]->reset();
           }
         } else {
           led[i] = LOW;
