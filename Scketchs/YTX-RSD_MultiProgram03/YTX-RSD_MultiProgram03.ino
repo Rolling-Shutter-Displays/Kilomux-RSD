@@ -216,9 +216,6 @@ void updateKm() {
       case 3: //next Button
         if ( !buttonState[i] ) {
           led[i] = HIGH;
-
-          display.clear();
-          white.clear();
           
           if ( buttonLastState[i] ) {
             if ( program < program_size ) {
@@ -227,6 +224,10 @@ void updateKm() {
               program = 0;
             }
             programs[program]->reset();
+            //Pause issue
+            buttonPushCounter[2] = 0;
+            led[2] = 0;
+            //
           }
         } else {
           led[i] = LOW;

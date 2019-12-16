@@ -58,14 +58,16 @@ uint8_t fourBitsSet[70]  = { 0x0F, 0x17, 0x1B, 0x1D, 0x1E, 0x27, 0x2B, 0x2D, 0x2
 
 struct Program {
   unsigned int pot[4];
-  unsigned int prevPot[4];
-  bool potState[4];
   unsigned int potValue[4];
+  bool potState[4];
   
   bool buttonState[4];
   bool buttonLastState[4];
   char buttonPushCounter[4];   // counter for the number of button presses
 
+  char buttonPausePushCounter;
+  bool paused = false;
+  
   bool led[4];
   
   virtual void draw() {}
@@ -120,19 +122,22 @@ struct TestScreenMono : Program {
         }
 
       //Save lectures
-      prevPot[i] = pot[i];
+      potValue[i] = pot[i];
       buttonLastState[i]= buttonState[i];
     }
     
   }
-  
+
+  void reset() {
+    display.clear();
+    white.clear();
+  }
   
 } testScreenMono;
 
 struct MirrorShift : Program {
   
   bool channelActive[4];
-  bool pauseProgram = false;
   
   void draw() {
     //Copy background
@@ -141,7 +146,7 @@ struct MirrorShift : Program {
     blue.copy( &blue );
     white.copy( &white );
 
-    if ( !pauseProgram ) {
+    if ( !paused ) {
     
     for( int i = 0 ; i < 4 ; i++ ) {
       
@@ -207,17 +212,23 @@ struct MirrorShift : Program {
   }
 
   void pause() {
-    pauseProgram = true;
+    paused = true;
   }
 
   void play() {
-    pauseProgram = false;
+    paused = false;
   }
 
   void reset() {
+    display.clear();
+    white.clear();
+    
     for( int i = 0 ; i < 4 ; i++ ) {
       potState[i] = false;
     }
+
+    paused = false;
+    
   }
   
   
@@ -236,7 +247,7 @@ struct Paint : Program {
     
     white.clear();
 
-    if ( !pauseProgram ) {  
+    if ( !paused ) {  
       if ( (frameCount%15) < 7 )  white.line( pot[4]>>2 );
     }
   }
@@ -249,7 +260,7 @@ struct Paint : Program {
         if( buttonLastState[i] ) { 
           ch[i]->line( pot[0]>>2 ); // rising edge
         } else {
-          ch[i]->fill( prevPot[0]>>2 , pot[0]>>2 ); // high state
+          ch[i]->fill( potValue[0]>>2 , pot[0]>>2 ); // high state
         }
       } else {
         led[i] = LOW;
@@ -261,7 +272,7 @@ struct Paint : Program {
       if( buttonLastState[3] ) { 
         display.clearSafe( pot[0]>>2 ); // rising edge
       } else {
-        display.clearSafe( prevPot[0]>>2 , pot[0]>>2 ); // high state
+        display.clearSafe( potValue[0]>>2 , pot[0]>>2 ); // high state
       }
     } else {
       led[3] = LOW;
@@ -269,22 +280,28 @@ struct Paint : Program {
       
     //Save lectures
     for( int i = 0 ; i < 4 ; i++ ) {
-      prevPot[i] = pot[i];
+      potValue[i] = pot[i];
       buttonLastState[i]= buttonState[i];
     }
   }
 
   void pause() {
-    pauseProgram = true;
+    paused = true;
   }
 
   void play() {
-    pauseProgram = false;
+    paused = false;
+  }
+
+  void reset() {
+    display.clear();
+    white.clear();
+    paused = false;
   }
   
 } paint;
 
-Program* programs[3] = { &testScreenMono , &paint , &mirrorShift };
+Program* programs[3] = { &testScreenMono , &mirrorShift , &paint  };
 
 int program = 0;
 const int program_size = 2;
