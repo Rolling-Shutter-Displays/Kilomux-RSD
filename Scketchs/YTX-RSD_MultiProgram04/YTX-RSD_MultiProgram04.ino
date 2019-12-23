@@ -6,19 +6,21 @@
  * 
  * ╔═════════════════════════════════════════════════════════════════╗
  * ║                                                                 ║
- * ║                              Param                              ║
- * ║   Gruesa    Fina    Shift      x                                ║
+ * ║   Sintonía                                                      ║
+ * ║   Gruesa   Fina     Shift    HBlank                             ║
  * ║     ○        ○        ○        ○                                ║
  * ║                                                 RSD             ║
  * ║   Param    Param    Param    Param               ☼              ║
  * ║     x        x        x        x                                ║
  * ║     ○        ○        ○        ○                                ║
  * ║                                                                 ║
- * ║    Bloq.     Prev     Next                                      ║
- * ║    Freq.     Button   Button   x                                ║
+ * ║                                                                 ║
+ * ║    On/      Bloq.    Play     Next                              ║
+ * ║    Off      Freq.    Pause    Button                            ║
  * ║     .        .        .        .                                ║
  * ║     ■        ■        ■        ■                                ║
- * ║                                                                 ║
+ * ║   ¿Save      MIDI                 } Hold States ?               ║
+ * ║                                                                 ║               
  * ║                                                                 ║
  * ║     x        x        x        x                                ║
  * ║     .        .        .        .                                ║
@@ -45,7 +47,7 @@
 // 9 = Red   = SensorTriggerPin
 // TODO: Pin-out
 
-#define BWIDTH 32 
+#define BWIDTH 32
 #define WIDTH ((BWIDTH*8)-1)
 #define PIN_R   SensorTriggerPin        // Pin de arduino conectado al LED Rojo
 #define PIN_G   ActivateSensorLedPin    // Pin de arduino conectado al LED Verde
@@ -65,29 +67,62 @@ Channel white( PIN_W , COMMON_CATHODE , BWIDTH );
 
 Screen display( &red , &green , &blue );
 
+Channel *ch[4] = { &red , &green , &blue , &white  };
+
 // Global variables  //////////////////////////////////////////////////////////////////////
 
-unsigned int pot[8];
-unsigned int prevPot[8];
+unsigned int pot[4];
+unsigned int prevPot[4];
 
-bool buttonState[8];
-bool buttonLastState[8];
-char buttonPushCounter[8];   // counter for the number of button presses
+bool buttonState[4];
+bool buttonLastState[4];
+char buttonPushCounter[4];   // counter for the number of button presses
 
-bool led[8];
+bool led[4];
+
+// States
 bool bloq = false;
+bool pause = false;
 
-int screen = 0;
-const int screen_size = 1;
+// Programs  ///////////////////////////////////////////////////////////////////////////////
+#include "Utils.h"
+#include "Programs.h"
+
+#include "TestScreenMono.h"
+#include "MirrorShift.h"
+#include "Paint.h"
+//#include "Noise.h"
+
+Program* programs[3] = { &testScreenMono , &mirrorShift , &paint /*, &noise */ };
+
+int program = 0;
+const int program_size = 2;
 
 //  Beginnig  /////////////////////////////////////////////////////////////////////////////
 
 void setup() { 
   //Setup of Kilomux 
   KmShield.init();                                    // Initialize Kilomux shield hardware
+  updateKm();
+
+  { // Presentation
+  KmShield.digitalWritePortKm( 0x18 , 2 );
+  delay(200);
+  KmShield.digitalWritePortKm( 0x24 , 2 );
+  delay(50);
+  KmShield.digitalWritePortKm( 0x42 , 2 );
+  delay(50);
+  KmShield.digitalWritePortKm( 0x81 , 2 );
+  delay(50);
+  KmShield.digitalWritePortKm( 0x00 , 2 );
+  delay(100);
+  KmShield.digitalWritePortKm( 0x81 , 2 );
+  delay(100);
+  KmShield.digitalWritePortKm( 0x00 , 2 );
+  }
 
   //Setup of RSD 
-  rsd.begin( 24 , BWIDTH );
+  rsd.begin( 30 , BWIDTH );
   
   rsd.attachChannel( red );
   rsd.attachChannel( green );
@@ -118,158 +153,127 @@ void loop() {
                                                              
 }
 
-// Screens //////////////////////////////////////////////////////////////////////////////
-#define ORANGE 8
-
-colour palette[8] =  { BLACK ,   RED ,    ORANGE ,      YELLOW ,     GREEN ,     BLUE ,     MAGENTA  ,   BLACK    };
-
-const int p[9] =  { 0 , WIDTH/8 , WIDTH*2/8 , WIDTH*3/8 , WIDTH*4/8 , WIDTH*5/8 , WIDTH*6/8 , WIDTH*7/8 , WIDTH };
-int diff[8];
-int partition[9];
-
-void testScreenRGB() {
-  display.clear(); 
-  white.clear();
-
-  for( int i = 0 ; i < 8 ; i++ ) {
-    diff[i] = ( WIDTH/16 ) * sin(( TWO_PI * ( frameCount%120 ) / 120 ) + TWO_PI*i/16 );
-  }
-
-  partition[0] = p[0];
-  for( int i = 0 ; i < 8 ; i++ ) {
-    partition[ i+1 ] = p[i+1] + diff[i];
-  }
-  partition[8] = p[8];
-
-  for( int i = 0 ; i < 8 ; i++ ) {
-    if( palette[i]==ORANGE ) {
-      display.fill( partition[i] , partition[i+1] , RED );
-      dither( partition[i] , partition[i+1] , green );
-    } else {
-      display.fill( partition[i] , partition[i+1] , palette[i] );
-    }
-  }
-  
-  } else {
-    for ( int i = 0 ; i < 4 ; i++ ) {
-      ch[i]->copy( ch[i] );
-    }
-  }
-}
-
-void whiteNoise() {
-  //Clear screen
-  display.clear();
-  //Clear white
-  white.clear();
-  
-  //Standarized order of the SMPTE/EBU color bar image : https://en.wikipedia.org/wiki/SMPTE_color_bars
-  //from left to right, the colors are white, yellow, cyan, green, magenta, red,  blue and black
-  for( int i = 0 ; i <= WIDTH ; i++ ) {
-    if ( random( 0 , 2 ) ) white.line( i );
-  }
-
-}
-
-void (*screens[])() = { testScreenRGB , whiteNoise };
-
 // Let's draw! //////////////////////////////////////////////////////////////////////////
 
 void draw() {
 
-  screens[screen]();
-  /*
-  //Serial diagnosis
-  Serial.print("@frsd: ");
-  Serial.print( rsd.getFrequency() , 10 );
-  Serial.print(" , BWIDHT: ");
-  Serial.print(BWIDTH);
-  Serial.print(" , tick: ");
-  Serial.print( rsd.getTick() );
-  Serial.print(" , fine: ");
-  Serial.println( rsd.getFine() );
-  */
+  programs[program]->draw();
   
-  Serial.println( frameLost );
   //Update Km
   updateKm();
 
   //Shift phase: Kilomux way
-  rsd.shiftPhase( map( pot[3] , 0 , 1023 , -1 , +2 ) );
-  
+  rsd.shiftPhase( map( pot[2] , 0 , 1023 , -1 , +2 ) );
+
+  //Debug
+  Serial.println( frameLost );
 }
 
 // Update Kilomux ///////////////////////////////////////////////////////////////////////
 
 void updateKm() {
-  //Update pot values
-  for( int i = 0 ; i < 8 ; i++ ) {
-    prevPot[i] = pot[i];
-    pot[i] = KmShield.analogReadKm( MUX_A, i );
-  }
   
-  //Update button states
-  for( int i = 0 ; i < 8 ; i++ ) {
-    buttonState[i] = KmShield.digitalReadKm( MUX_B , i , PULLUP );
-    
-    switch ( i ) {
-
-    case 0 : //Bloq button
-      if ( buttonState[i] != buttonLastState[i] ) {
-        if ( buttonState[i] == LOW ) buttonPushCounter[i]++;
-      }
-      break;
-
-    case 1: //prev Button
-      if ( !buttonState[i] ) {
-        led[i] = HIGH;
-        if ( buttonLastState[i] ) {
-          if ( screen > 0 ) {
-            screen--;
-          } else {
-            screen = screen_size;
-          }
-        }
-      } else {
-        led[i] = LOW;
-      }
-      break;
-
-    case 2: //next Button
-      if ( !buttonState[i] ) {
-        led[i] = HIGH;
-        if ( buttonLastState[i] ) {
-          if ( screen < screen_size ) {
-            screen++;
-          } else {
-            screen = 0;
-          }
-        }
-      } else {
-        led[i] = LOW;
-      }
-      break;
-     break;
-
-     default: break;
-    }
-    
-    buttonLastState[i]= buttonState[i];
-  }
-
+  // Update general RSD controls //
   
-  //Update leds and states
   for( int i = 0 ; i < 4 ; i++ ) {
-    if ( i == 0 ) {
-      if ( buttonPushCounter[i]&1 ) {
-        led[i] = HIGH;
-        if ( !i ) bloq = true;
-      } else {
-        led[i] = LOW;
-        if( !i ) bloq = false;
-      }
-    }
+    //Update pots
+    pot[i] = KmShield.analogReadKm( MUX_A, i );
+  
+    //Update buttons
+    buttonState[i] = KmShield.digitalReadKm( MUX_B , i , PULLUP );
+
+    //Updete states
     
+    //Click detection
+    if ( ( buttonState[i] == LOW ) && ( buttonLastState[i] == HIGH ) ) {
+        buttonPushCounter[i]++;
+    }
+
+    switch( i ) {
+
+      //Button 0 = On/Off
+      case 0: 
+        if ( buttonPushCounter[i]&1 ) {
+          led[i] = HIGH;
+          rsd.switchOff();
+        } else {
+          led[i] = LOW;
+          rsd.switchOn();
+        }
+      break;
+      
+      //Button 1 = Bloq Freq
+      case 1: 
+        if ( buttonPushCounter[i]&1 ) {
+          led[i] = HIGH;
+          bloq = true;
+        } else {
+          led[i] = LOW;
+          bloq = false;
+        }
+      break;
+      
+      //Button 2 = Play/Pause
+      case 2: 
+        if ( buttonPushCounter[i]&1 ) {
+          led[i] = HIGH;
+          programs[program]->pause();
+        } else {
+          led[i] = LOW;
+          programs[program]->play();
+        }
+      break;
+         
+      //Button 3 = Next Button
+      case 3: //next Button
+        if ( !buttonState[i] ) {
+          led[i] = HIGH;
+          
+          if ( buttonLastState[i] ) {
+            if ( program < program_size ) {
+              program++;
+            } else {
+              program = 0;
+            }
+            programs[program]->reset();
+            //Pause issue
+            buttonPushCounter[2] = 0;
+            led[2] = 0;
+            //
+          }
+        } else {
+          led[i] = LOW;
+        }
+      break;
+      
+      default: break;
+    }
+
+    //Save lectures
+    prevPot[i] = pot[i];
+    buttonLastState[i]= buttonState[i];
+
+    //Update leds
     KmShield.digitalWriteKm( i + 8 , led[i] );
   }
+
+  // Update programs controls //
+  for( int i = 0 ; i < 4 ; i++ ) {
+    //Update pots
+    programs[program]->pot[i] = KmShield.analogReadKm( MUX_A , i + 4 );
+
+    //Update buttons
+    programs[program]->buttonState[i] = KmShield.digitalReadKm( MUX_B , i + 4 , PULLUP );
+
+  }
+
+  //Update states program
+  programs[program]->updateState();
+
+
+  //Update leds 
+  for( int i = 0 ; i < 4 ; i++ ) {
+    KmShield.digitalWriteKm( i + 12 , programs[program]->led[i] );   
+  }
+
 }
