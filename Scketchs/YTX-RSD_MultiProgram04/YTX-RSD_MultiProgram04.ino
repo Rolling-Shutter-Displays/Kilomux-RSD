@@ -91,12 +91,12 @@ bool pause = false;
 #include "TestScreenMono.h"
 #include "MirrorShift.h"
 #include "Paint.h"
-//#include "Noise.h"
+#include "Noise.h"
 
-Program* programs[3] = { &testScreenMono , &mirrorShift , &paint /*, &noise */ };
+Program* programs[4] = { &testScreenMono , &mirrorShift , &paint , &noise  };
 
 int program = 0;
-const int program_size = 2;
+const int program_size = 3;
 
 //  Beginnig  /////////////////////////////////////////////////////////////////////////////
 
@@ -131,6 +131,12 @@ void setup() {
 
   rsd.attachDraw( draw );
 
+
+  //Programs setup
+  for( int i = 0 ; i <= program_size ; i++ ) {
+    programs[i]->setup();
+  }
+
   //Comunications
   Serial.begin( 115200 );
   
@@ -142,6 +148,14 @@ void loop() {
   //Run the RSD engine
   rsd.update();
   
+  
+                                                             
+}
+
+// Let's draw! //////////////////////////////////////////////////////////////////////////
+
+void draw() {
+
   //Tuning: Kilomux way
   int tick = map( KmShield.analogReadKm( MUX_A, 0 ) , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
   int fine = map( KmShield.analogReadKm( MUX_A, 1 ) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
@@ -150,12 +164,6 @@ void loop() {
     rsd.setTick( tick );
     rsd.setFine( fine );
   }
-                                                             
-}
-
-// Let's draw! //////////////////////////////////////////////////////////////////////////
-
-void draw() {
 
   programs[program]->draw();
   

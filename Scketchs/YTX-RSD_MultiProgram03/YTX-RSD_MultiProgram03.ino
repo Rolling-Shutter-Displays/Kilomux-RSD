@@ -131,21 +131,21 @@ void setup() {
 void loop() {
   //Run the RSD engine
   rsd.update();
-  
-  //Tuning: Kilomux way
-  int tick = map( KmShield.analogReadKm( MUX_A, 0 ) , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
-  int fine = map( KmShield.analogReadKm( MUX_A, 1 ) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
-
-  if ( !bloq ) {
-    rsd.setTick( tick );
-    rsd.setFine( fine );
-  }
                                                              
 }
 
 // Let's draw! //////////////////////////////////////////////////////////////////////////
 
 void draw() {
+
+  //Tuning: Kilomux way
+  int tick_t = map( KmShield.analogReadKm( MUX_A, 0 ) , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
+  int fine_t = map( KmShield.analogReadKm( MUX_A, 1 ) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
+
+  if ( !bloq ) {
+    rsd.setTick( tick_t );
+    rsd.setFine( fine_t );
+  }
 
   programs[program]->draw();
   

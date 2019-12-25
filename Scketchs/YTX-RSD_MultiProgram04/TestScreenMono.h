@@ -1,5 +1,10 @@
 struct TestScreenMono : Program {
   bool channelActive[4];
+
+  void setup() {
+    buttonPushCounter[0] = 1;
+    buttonPushCounter[2] = 1;
+  }
   
   void draw() {
     display.clear();

@@ -13,13 +13,13 @@ struct MirrorShift : Program {
     
     for( int i = 0 ; i < 4 ; i++ ) {
       
-      ShiftByOne( 130 , 253 , ch[i] );
-      ShiftByOne( 125 , 2 , ch[i] );
+      ShiftByOne( WIDTH/2 + 3 , WIDTH - 2 , ch[i] );
+      ShiftByOne( WIDTH/2 - 2 ,         2 , ch[i] );
     
-      if ( channelActive[i] ) {
+      if ( channelActive[i] ) { 
         if ( !(int)random( potValue[i]>>7 ) ) {
-          ch[i]->line( 125 );
-          ch[i]->line( 130 );
+          ch[i]->line( WIDTH/2 - 2 );
+          ch[i]->line( WIDTH/2 + 3 );
         }
       }
     }

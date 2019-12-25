@@ -13,9 +13,11 @@ struct Program {
   bool paused = false;
   
   bool led[4];
-  
+
+  virtual void setup() {}
   virtual void draw() {}
   virtual void updateState() {}
+  
   virtual void pause() {}
   virtual void play() {}
   virtual void reset() {}
