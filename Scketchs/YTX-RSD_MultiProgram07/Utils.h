@@ -95,3 +95,26 @@ void ShiftByOne( int begin , int end , Channel *ch ) {
   }
   
 }
+
+void RollOver( int begin , int end , Channel *ch ) {
+  
+  if( begin > end ) { //Shift Right
+    int i = end;
+    bool _end = ch->get(i);
+    do {
+      ( ch->get( i + 1 ) ) ? ch->line( i ) : ch->clear( i ) ;
+      i++;
+    } while ( i < begin );
+    _end ? ch->line( begin ) : ch->clear( begin );
+  }
+
+  if( begin < end ) { //Shift Left
+    int i = end;
+    bool _end = ch->get(i);
+    do {
+      ( ch->get( i - 1 ) ) ? ch->line( i ) : ch->clear( i ) ;
+      i--;
+    } while ( i > begin );
+    _end ? ch->line( begin ) : ch->clear( begin );
+  }
+}
