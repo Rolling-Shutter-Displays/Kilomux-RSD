@@ -96,8 +96,9 @@ bool pause = false;
 #include "Zoom.h"
 #include "Twist.h"
 #include "Triangles.h"
+#include "Triangles2.h"
 
-Program* programs[7] = { &testScreenRGB , &twist , &triangles , &mirrorShift , &zoom , &noise , &fourColors  };
+Program* programs[7] = { &testScreenRGB , &twist , &triangles2 , &mirrorShift , &zoom , &noise , &fourColors  };
 
 int program = 2;
 const int program_size = 6;

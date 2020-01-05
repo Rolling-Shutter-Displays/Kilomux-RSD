@@ -1,53 +1,53 @@
-struct Triangles : Program {
+struct Triangles2 : Program {
   
   bool channelActive[4];
+
+  char buffer[BWIDTH];
   
-  int speed[4];
+  int pos[4];
+  int steps[4];
   
   void setup() {
-    potValue[0] = 512;
-    potValue[1] = 0;
-    potValue[2] = 0;
-    potValue[3] = 0;
+    steps[0] = 16;
+    steps[3] = 14;
     
     buttonPushCounter[0] = 1;
+    buttonPushCounter[3] = 1;
     
     reset();
   }
   
   void draw() {
     if( !paused ) {
-      
-      copyBackground();
+      clearBackground();
 
       for( int i = 0 ; i < 4 ; i++ ) {
-        speed[i] = map( potValue[i] , 0 , 1023 , -2 , + 2.9 );
         
-        Serial.println(speed[i]);
+        pos[i] = map( potValue[i] , 0 , 1023 , 0 , WIDTH );
 
-        if( speed[i] > 0 ) {
-          do {
-            RollOver( 0 , WIDTH , ch[i] );
-            speed[i]--;
-          } while( speed[i] );
-        } else if( speed[i] < 0 ) {
-          do {
-            RollOver( WIDTH , 0 , ch[i] );
-            speed[i]++;
-          } while( speed[i] );
-        }
+        if ( channelActive[i] ) triangle( 0  , WIDTH/2 , steps[i] , ch[i] );
+        if ( channelActive[i] ) triangle( WIDTH , WIDTH/2 , steps[i] , ch[i] );
+
+        copyBuffer( ch[i]->get() , buffer );
+        ch[i]->clear();
+        copyBuffer( buffer , ch[i]->get() , pos[i] );
+        
       }
     
     } else { //if paused
       
       clearBackground();
-     
-      display.line( 0 , RED );
-      display.line( WIDTH , BLUE );
       
       for( int i = 0 ; i < 4 ; i++ ) {
-        if ( channelActive[i] ) triangle( 0  , WIDTH/2 , map( potValue[i] , 0 , 1023 , 0 , 50 ) , ch[i] );
-        if ( channelActive[i] ) triangle( WIDTH , WIDTH/2 , map( potValue[i] , 0 , 1023 , 0 , 50 ) , ch[i] );
+        steps[i] = map( potValue[i] , 0 , 1023 , 0 , 40 );
+        
+        if ( channelActive[i] ) triangle( 0  , WIDTH/2 , steps[i] , ch[i] );
+        if ( channelActive[i] ) triangle( WIDTH , WIDTH/2 , steps[i] , ch[i] );
+
+        copyBuffer( ch[i]->get() , buffer );
+        ch[i]->clear();
+        copyBuffer( buffer , ch[i]->get() , pos[i] );
+      
       }
       
     }
@@ -93,13 +93,20 @@ struct Triangles : Program {
 
   int interval = ( end - begin ) / steps;
   interval = abs( interval ) + 1;
+  int diff;
+  
+  if ( !paused ) {
+    diff = frameCount%interval;
+  } else {
+    diff = 0;
+  }
 
   if ( begin < end ) {
 
     if ( begin < 0 ) return;
 
     for ( int i = 0 ; i < steps ; i++ ) {
-      fillSafe( begin , end , begin + interval * i + frameCount%interval , begin + interval * i + map( i , 0 , steps, 0 , interval ) + frameCount%interval , ch );
+      fillSafe( begin , end , begin + interval * i + diff , begin + interval * i + map( i , 0 , steps, 0 , interval ) + diff , ch );
     }
 
   } else if( begin > end ) {
@@ -107,7 +114,7 @@ struct Triangles : Program {
     if( end > WIDTH ) return;
     
     for ( int i = 0 ; i < steps ; i++ ) {
-      fillSafe( end , begin , begin - interval * i - frameCount%interval , begin - interval * i - map( i , 0 , steps, 0 , interval ) - frameCount%interval , ch );
+      fillSafe( end , begin , begin - interval * i - diff , begin - interval * i - map( i , 0 , steps, 0 , interval ) - diff , ch );
     }
   
   } else {
@@ -118,4 +125,4 @@ struct Triangles : Program {
   
   }
 
-} triangles;
+} triangles2;

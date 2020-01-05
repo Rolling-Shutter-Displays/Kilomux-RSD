@@ -119,6 +119,30 @@ void RollOver( int begin , int end , Channel *ch ) {
   }
 }
 
+void copyBuffer( char *src , char *dst ) {
+  for( uint8_t i = 0 ; i < BWIDTH ; i++ ) {
+    *( dst + i ) = *( src + i );
+  }
+}
+
+void copyBuffer( char *src , char *dst , int t ) {
+  
+  t = t % ( WIDTH + 1 );
+  
+  for( int _pos = 0 ; _pos < WIDTH ; _pos++ ) {
+    
+    int p = _pos + t;
+    
+    if ( *( src + _pos / 8 ) & ( 1 << _pos % 8 ) ) {
+      
+      if ( ( p ) > WIDTH ) { p = p - WIDTH - 1; }
+      
+      *( dst + p / 8 ) |= ( 1 << p % 8 );
+    }
+  }
+  
+}
+
 /*  
 void triangle( int begin , int end , int steps , Channel *ch ) {
   int interval;
@@ -172,33 +196,4 @@ bool fillSafe( int y0 , int y1 , int x0 , int x1 , Channel *ch ) {
       ch->line( x1 );
       
     }
-}
-
-void triangle( int begin , int end , int steps , Channel *ch ) {
-
-  int interval = ( end - begin ) / steps;
-  interval = abs( interval ) + 1;
-
-  if ( begin < end ) {
-
-    if ( begin < 0 ) return;
-
-    for ( int i = 0 ; i < steps ; i++ ) {
-      fillSafe( begin , end , begin + interval * i + frameCount%interval , begin + interval * i + map( i , 0 , steps, 0 , interval ) + frameCount%interval , ch );
-    }
-
-  } else if( begin > end ) {
-    
-    if( end > WIDTH ) return;
-    
-    for ( int i = 0 ; i < steps ; i++ ) {
-      fillSafe( end , begin , begin - interval * i - frameCount%interval , begin - interval * i - map( i , 0 , steps, 0 , interval ) - frameCount%interval , ch );
-    }
-  
-  } else {
-    
-    ch->lineSafe( begin );
-  
-  }
-  
 }
