@@ -118,3 +118,18 @@ void RollOver( int begin , int end , Channel *ch ) {
     _end ? ch->line( begin ) : ch->clear( begin );
   }
 }
+
+void triangle( int begin , int end , int steps , Channel *ch ) {
+  int interval;
+  if( begin <= end ) {
+    interval = ( end - begin ) / steps;
+    for ( uint8_t i = 1 ; i < steps ; i++ ) {
+      ch->fill( begin + interval*i , begin + interval*i + map( i , 1 , steps, 0 , interval ) ); 
+    }
+  } else {
+    interval = ( begin - end ) / steps;
+    for ( uint8_t i = 1 ; i < steps ; i++ ) {
+      ch->fill( begin - interval*i , begin - interval*i - map( i , 1 , steps, 0 , interval ) ); 
+    }
+  }
+}

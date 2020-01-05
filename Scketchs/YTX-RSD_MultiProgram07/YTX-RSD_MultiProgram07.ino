@@ -95,11 +95,12 @@ bool pause = false;
 #include "FourColors.h"
 #include "Zoom.h"
 #include "Twist.h"
+#include "Triangles.h"
 
-Program* programs[6] = { &testScreenRGB , &twist , &mirrorShift , &zoom , &noise , &fourColors  };
+Program* programs[7] = { &testScreenRGB , &twist , &triangles , &mirrorShift , &zoom , &noise , &fourColors  };
 
-int program = 0;
-const int program_size = 5;
+int program = 2;
+const int program_size = 6;
 
 //  Beginnig  /////////////////////////////////////////////////////////////////////////////
 

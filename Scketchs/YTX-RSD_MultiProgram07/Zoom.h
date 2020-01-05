@@ -14,11 +14,18 @@ struct Zoom : Program {
       clearBackground();
       
       int d = ( potValue[0]>>2 ) + 1;
-      int pos = 0;
+      
+      int pos = WIDTH/2 + d/2;
       ch[0]->lineSafe( pos );
       do {   
         pos = pos + d;
-      } while (  ch[0]->lineSafe( pos ) );
+      } while ( ch[0]->lineSafe( pos ) );
+      
+      pos = WIDTH/2 - d/2;
+      ch[0]->lineSafe( pos );
+      do {   
+        pos = pos - d;
+      } while ( ch[0]->lineSafe( pos ) );
 
       if( channelActive[3] ) ch[3]->fill();
      
