@@ -140,7 +140,8 @@ void setup() {
   for( int i = 0 ; i <= program_size ; i++ ) {
     programs[i]->setup();
   }
-
+  programs[program]->reset();
+  
   //Comunications
   Serial.begin( 115200 );
   
@@ -151,9 +152,7 @@ void setup() {
 void loop() {
   //Run the RSD engine
   rsd.update();
-  
-  
-                                                             
+                                                            
 }
 
 // Let's draw! //////////////////////////////////////////////////////////////////////////

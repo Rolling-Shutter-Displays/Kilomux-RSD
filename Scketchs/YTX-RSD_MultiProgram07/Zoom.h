@@ -3,7 +3,7 @@ struct Zoom : Program {
   bool channelActive[4];
   
   void setup() {
-    potValue[0] = 0;
+    potValue[0] = 511;
     potValue[1] = 0;
     potValue[2] = 0;
     potValue[3] = 0;

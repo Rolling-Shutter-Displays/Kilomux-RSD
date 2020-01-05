@@ -16,67 +16,67 @@ void clearBackground() {
 
 
 void dither( int x0 , int x1 , Channel ch ) {
-  if ( x1 > x0 ) {  
+  if ( x1 > x0 ) {
     do {
       if ( x1 % 2 ) ch.line( x1 );
       x1--;
-    } while( x1 > x0 ); 
-    
+    } while ( x1 > x0 );
+
     if ( x1 % 2 ) ch.line( x0 ) ;
   }
-    /*
-  } else if( x1 == x0 ) {
-            
-            line( x1 );
-            
-        } else {
-            
-            do {
-                line( x0 );
-                x0--;
-            } while( x0 > x1 );
-            
-            line( x1 );
-        }
-}
-*/
+  /*
+    } else if( x1 == x0 ) {
+
+          line( x1 );
+
+      } else {
+
+          do {
+              line( x0 );
+              x0--;
+          } while( x0 > x1 );
+
+          line( x1 );
+      }
+    }
+  */
 }
 
 void dither2( unsigned int x0 , unsigned int x1 , char o , Channel *ch ) {
   bool right;
-  
-  switch( o ) {
+
+  switch ( o ) {
     case 0 : return; break;
     case 1 : right = true; break;
     case 2 : right = false; break;
-    default : return; break; 
+    default : return; break;
   }
-  
-  if ( x1 > x0 ) {  
+
+  if ( x1 > x0 ) {
     do {
       if ( !( ( x1 % 2 )^right ) ) ch->clear( x1 );
       x1--;
-    } while( x1 > x0 ); 
-    
+    } while ( x1 > x0 );
+
     if ( !( ( x1 % 2 )^right ) ) ch->clear( x0 ) ;
-  
-  } else if( x1 == x0 ) {
-            
+
+  } else if ( x1 == x0 ) {
+
     if ( !( ( x1 % 2 )^right ) ) ch->clear( x0 ) ;
-            
+
   } else { // if ( x1 < x0 )
     do {
       if ( !( ( x0 % 2 )^right ) )  ch->clear( x0 );
       x0--;
-    } while( x0 > x1 );
-    
+    } while ( x0 > x1 );
+
     if ( !( ( x0 % 2 )^right ) ) ch->clear( x1 ) ;
   }
 }
 
 void ShiftByOne( int begin , int end , Channel *ch ) {
-  
-  if( begin > end ) { //Shift Right
+
+  if ( begin > end ) { //Shift Right
     int i = end;
     do {
       ( ch->get( i + 1 ) ) ? ch->line( i ) : ch->clear( i ) ;
@@ -85,7 +85,7 @@ void ShiftByOne( int begin , int end , Channel *ch ) {
     ch->clear( begin );
   }
 
-  if( begin < end ) { //Shift Left
+  if ( begin < end ) { //Shift Left
     int i = end;
     do {
       ( ch->get( i - 1 ) ) ? ch->line( i ) : ch->clear( i ) ;
@@ -93,12 +93,12 @@ void ShiftByOne( int begin , int end , Channel *ch ) {
     } while ( i > begin );
     ch->clear( begin );
   }
-  
+
 }
 
 void RollOver( int begin , int end , Channel *ch ) {
-  
-  if( begin > end ) { //Shift Right
+
+  if ( begin > end ) { //Shift Right
     int i = end;
     bool _end = ch->get(i);
     do {
@@ -108,7 +108,7 @@ void RollOver( int begin , int end , Channel *ch ) {
     _end ? ch->line( begin ) : ch->clear( begin );
   }
 
-  if( begin < end ) { //Shift Left
+  if ( begin < end ) { //Shift Left
     int i = end;
     bool _end = ch->get(i);
     do {
@@ -119,17 +119,86 @@ void RollOver( int begin , int end , Channel *ch ) {
   }
 }
 
+/*  
 void triangle( int begin , int end , int steps , Channel *ch ) {
   int interval;
   if( begin <= end ) {
     interval = ( end - begin ) / steps;
     for ( uint8_t i = 1 ; i < steps ; i++ ) {
-      ch->fill( begin + interval*i , begin + interval*i + map( i , 1 , steps, 0 , interval ) ); 
+      ch->fill( begin + interval*i , begin + interval*i + map( i , 1 , steps, 0 , interval ) );
     }
   } else {
     interval = ( begin - end ) / steps;
     for ( uint8_t i = 1 ; i < steps ; i++ ) {
-      ch->fill( begin - interval*i , begin - interval*i - map( i , 1 , steps, 0 , interval ) ); 
+      ch->fill( begin - interval*i , begin - interval*i - map( i , 1 , steps, 0 , interval ) );
     }
   }
+}
+*/
+
+bool fillSafe( int y0 , int y1 , int x0 , int x1 , Channel *ch ) { 
+
+  //Check boundaries
+  if ( ( y0 < 0 ) || ( y1 < 0 ) ) return false;
+  if ( ( y0 > WIDTH ) || ( y1 > WIDTH ) ) return false;
+  
+  if ( ( x0 < y0 ) && ( x1 < y0 ) ) return false;
+  if ( ( x0 > y1 ) && ( x1 > y1 ) ) return false;
+        
+  if ( x1 > x0 ) {       
+    if ( x1 > y1 ) x1 = y1;
+    if ( x0 < y0 ) x0 = y0;
+    
+    do {
+      ch->line( x1 );
+      x1--;
+    } while( x1 > x0 );
+            
+    ch->line( x0 );
+            
+    } else if( x1 == x0 ) {    
+    
+      if ( ( x1 > y0 ) && ( x1 < y1 ) ) ch->line( x1 );
+    
+  } else {
+    if ( x0 > y1 ) x0 = y1;
+    if ( x1 < y0 ) x1 = y0;
+    
+    do {
+      ch->line( x0 );
+      x0--;
+    } while( x0 > x1 );        
+    
+      ch->line( x1 );
+      
+    }
+}
+
+void triangle( int begin , int end , int steps , Channel *ch ) {
+
+  int interval = ( end - begin ) / steps;
+  interval = abs( interval ) + 1;
+
+  if ( begin < end ) {
+
+    if ( begin < 0 ) return;
+
+    for ( int i = 0 ; i < steps ; i++ ) {
+      fillSafe( begin , end , begin + interval * i + frameCount%interval , begin + interval * i + map( i , 0 , steps, 0 , interval ) + frameCount%interval , ch );
+    }
+
+  } else if( begin > end ) {
+    
+    if( end > WIDTH ) return;
+    
+    for ( int i = 0 ; i < steps ; i++ ) {
+      fillSafe( end , begin , begin - interval * i - frameCount%interval , begin - interval * i - map( i , 0 , steps, 0 , interval ) - frameCount%interval , ch );
+    }
+  
+  } else {
+    
+    ch->lineSafe( begin );
+  
+  }
+  
 }
