@@ -1,7 +1,7 @@
 /* Autor: derfaq (Facundo Daguerre) - Rolling Shutter Displays 
  * Date: 11/06/19
  */
- 
+
 /*  Layout /////////////////////////////////////////////////////////////////////////////
  * 
  * ╔═════════════════════════════════════════════════════════════════╗
@@ -97,11 +97,12 @@ bool pause = false;
 #include "Twist.h"
 #include "Triangles.h"
 #include "Triangles2.h"
+#include "Player.h"
 
-Program* programs[7] = { &testScreenRGB , &twist , &triangles2 , &mirrorShift , &zoom , &noise , &fourColors  };
+Program* programs[8] = { &player , &testScreenRGB , &twist , &triangles2 , &mirrorShift , &zoom , &noise , &fourColors  };
 
-int program = 2;
-const int program_size = 6;
+int program = 0;
+const int program_size = 7;
 
 //  Beginnig  /////////////////////////////////////////////////////////////////////////////
 
