@@ -130,10 +130,10 @@ void setup() {
   //Setup of RSD 
   rsd.begin( 30 , BWIDTH );
   
-  rsd.attachChannel( red );
-  rsd.attachChannel( green );
-  rsd.attachChannel( blue );
-  rsd.attachChannel( white );
+  rsd.attachChannel( &red );
+  rsd.attachChannel( &green );
+  rsd.attachChannel( &blue );
+  rsd.attachChannel( &white );
 
   rsd.attachDraw( draw );
 

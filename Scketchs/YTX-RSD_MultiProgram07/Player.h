@@ -4,6 +4,9 @@ struct Player : Program {
   
   bool channelActive[4];
   
+  char buffer[BWIDTH];
+  int pos[4] = { 0 , 0 , 0 , 0 };
+  
   int speed[4];
   
   void setup() {
@@ -25,6 +28,18 @@ struct Player : Program {
       for( int i = 0 ; i < BWIDTH ; i++ ) {
         *( ch[0]->get() + i ) = pgm_read_byte( &D3Quad_r[frameCount%60][i]);
         *( ch[3]->get() + i ) = pgm_read_byte( &D3Quad_b[frameCount%60][i]);
+        
+        *( ch[1]->get() + i ) = pgm_read_byte( &D3Quad_r[(0xFFFF - 15 - frameCount)%60][i]);
+        *( ch[2]->get() + i ) = pgm_read_byte( &D3Quad_b[(0XFFFF - 15 - frameCount)%60][i]);
+      }
+
+      pos[0] = pos[3] = map( potValue[0] , 0 , 1023 , 0 , WIDTH );
+      pos[1] = pos[2] = map( potValue[1] , 0 , 1023 , 0 , WIDTH );
+      
+      for( int i = 0 ; i < 4 ; i++ ) {
+        copyBuffer( ch[i]->get() , buffer );
+        ch[i]->clear();
+        copyBuffer( buffer , ch[i]->get() , pos[i] );
       }
     
     } else { //if paused
