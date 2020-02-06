@@ -162,11 +162,11 @@ void loop() {
 void draw() {
 
   //Tuning: Kilomux way
-  int tick = map( KmShield.analogReadKm( MUX_A, 0 ) , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
+  int thick = map( KmShield.analogReadKm( MUX_A, 0 ) , 0 , 1023 , rsd.getLowerThick() , rsd.getHigherThick() );
   int fine = map( KmShield.analogReadKm( MUX_A, 1 ) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
 
   if ( !bloq ) {
-    rsd.setTick( tick );
+    rsd.setThick( thick );
     rsd.setFine( fine );
   }
 
