@@ -1,47 +1,39 @@
-struct Zoom : Program {
-  
+struct TestScreenRGB : Program {
   bool channelActive[4];
+  char bars[4];
+  const unsigned int p[9] =  { 0 , WIDTH/8 , WIDTH*2/8 , WIDTH*3/8 , WIDTH*4/8 , WIDTH*5/8 , WIDTH*6/8 , WIDTH*7/8 , WIDTH };
   
   void setup() {
-    potValue[0] = 511;
-    potValue[1] = 0;
-    potValue[2] = 0;
-    potValue[3] = 0;
+    potValue[0] = 0xCC;
+    potValue[1] = 0xF0;
+    potValue[2] = 0xAA;
+    potValue[3] = 0x0F;
+    
+    buttonPushCounter[0] = 1;
+    buttonPushCounter[1] = 1;
+    buttonPushCounter[2] = 1;
   }
   
   void draw() {
     if( !paused ) {
-      clearBackground();
-      
-      //int d = ( potValue[0]>>2 ) + 1;
-      int d = 0;
-      float s = 0.01 + potValue[1] / 512.0 ;
-      
-      int pos = WIDTH/2 + 1;
-      
-     
-      ch[0]->lineSafe( pos );
+    //Clear screen
+    display.clear();
+    //Clear white
+    white.clear();
 
-      do {   
-        pos = pos + d*d*s;
-        d++;
-      } while ( ch[0]->lineSafe( pos ) );
-            
-      pos = WIDTH/2 ;
-      d = 0;
-      
-      ch[2]->lineSafe( pos );
-      do {   
-        pos = pos - d*d*s + 1;
-        d++;
-      } while ( ch[2]->lineSafe( pos ) );
-      
-      if( channelActive[3] ) ch[3]->fill();
-     
-    } else { //if paused
-      copyBackground();
+    for( int i = 0 ; i < 4 ; i++ ) {
+      bars[i] = potValue[i]>>2 ;
+    }
+
+    for( int i = 0 ; i < 8 ; i++ ) {
+      for( int j = 0 ; j < 4 ; j++ ) {
+        if( ( bars[j] & ( 1 << i ) ) && channelActive[j] ) {
+          ch[j]->fill( p[i] + 1 , p[i+1] );
+        }
+      }
     }
     
+    }
   }
   
   void updateState() {
@@ -93,10 +85,10 @@ struct Zoom : Program {
   void reset() {
     //Reset states
     for( int i = 0 ; i < 4 ; i++ ) {
-      potState[i] = true;
+      potState[i] = false;
     }
     
     paused = false;
   }
 
-} zoom;
+} testScreenRGB;

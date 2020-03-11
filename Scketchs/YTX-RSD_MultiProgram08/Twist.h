@@ -1,45 +1,38 @@
-struct Zoom : Program {
+struct Twist : Program {
   
   bool channelActive[4];
+
+  colour c[4] = { RED , BLACK , RED , BLACK };
+  const unsigned int p[5] =  { 0 , WIDTH/4 , WIDTH*2/4 , WIDTH*3/4 , WIDTH };
   
   void setup() {
-    potValue[0] = 511;
-    potValue[1] = 0;
+    potValue[0] = 1023*2/4;
+    potValue[1] = 1023*3/4;
     potValue[2] = 0;
     potValue[3] = 0;
   }
   
   void draw() {
+    copyBackground();
+    
     if( !paused ) {
-      clearBackground();
+      /*
+      int x0 = random( 0 , 127 );
+      int x1 = random( 0 , 127 );
+      /*
+      while ( x1 > x0 ) {
+        x1 = random( 0 , 127 );
+      }
+      */
+      int x0 = potValue[0]>>2;
+      int x1 = potValue[1]>>2;
       
-      //int d = ( potValue[0]>>2 ) + 1;
-      int d = 0;
-      float s = 0.01 + potValue[1] / 512.0 ;
-      
-      int pos = WIDTH/2 + 1;
-      
+      for( int i = 0 ; i < 4 ; i++ ) {
+        int x0 = random( 0 ,  WIDTH );
+        int x1 = random( 0 , WIDTH );
+        RollOver( x0 , x1 , ch[i] );
+      }
      
-      ch[0]->lineSafe( pos );
-
-      do {   
-        pos = pos + d*d*s;
-        d++;
-      } while ( ch[0]->lineSafe( pos ) );
-            
-      pos = WIDTH/2 ;
-      d = 0;
-      
-      ch[2]->lineSafe( pos );
-      do {   
-        pos = pos - d*d*s + 1;
-        d++;
-      } while ( ch[2]->lineSafe( pos ) );
-      
-      if( channelActive[3] ) ch[3]->fill();
-     
-    } else { //if paused
-      copyBackground();
     }
     
   }
@@ -93,10 +86,19 @@ struct Zoom : Program {
   void reset() {
     //Reset states
     for( int i = 0 ; i < 4 ; i++ ) {
-      potState[i] = true;
+      potState[i] = false;
     }
     
     paused = false;
+
+    /*
+    clearBackground();
+
+    //Draw bars
+    for( int i = 0 ; i < 4 ; i++ ) {
+      display.fill( p[i] + 1 , p[i+1] , c[i] );
+    }
+    */
   }
 
-} zoom;
+} twist;

@@ -1,50 +1,44 @@
-struct Zoom : Program {
+struct MirrorShift : Program {
   
   bool channelActive[4];
-  
+
   void setup() {
-    potValue[0] = 511;
-    potValue[1] = 0;
-    potValue[2] = 0;
-    potValue[3] = 0;
+    potValue[0] = 512;
+    potValue[1] = 512;
+    potValue[2] = 512;
+    potValue[3] = 512;
+    
+    buttonPushCounter[0] = true;
+    buttonPushCounter[2] = true;
   }
   
   void draw() {
-    if( !paused ) {
-      clearBackground();
-      
-      //int d = ( potValue[0]>>2 ) + 1;
-      int d = 0;
-      float s = 0.01 + potValue[1] / 512.0 ;
-      
-      int pos = WIDTH/2 + 1;
-      
-     
-      ch[0]->lineSafe( pos );
+    //Copy background
+    red.copy( &red );
+    green.copy( &green );
+    blue.copy( &blue );
+    white.copy( &white );
 
-      do {   
-        pos = pos + d*d*s;
-        d++;
-      } while ( ch[0]->lineSafe( pos ) );
-            
-      pos = WIDTH/2 ;
-      d = 0;
+    if ( !paused ) {
+    
+    for( int i = 0 ; i < 4 ; i++ ) {
       
-      ch[2]->lineSafe( pos );
-      do {   
-        pos = pos - d*d*s + 1;
-        d++;
-      } while ( ch[2]->lineSafe( pos ) );
-      
-      if( channelActive[3] ) ch[3]->fill();
-     
-    } else { //if paused
-      copyBackground();
+      ShiftByOne( WIDTH/2 + 3 , WIDTH - 2 , ch[i] );
+      ShiftByOne( WIDTH/2 - 2 ,         2 , ch[i] );
+    
+      if ( channelActive[i] ) { 
+        if ( !(int)random( potValue[i]>>7 ) ) {
+          ch[i]->line( WIDTH/2 - 2 );
+          ch[i]->line( WIDTH/2 + 3 );
+        }
+      }
+    }
     }
     
   }
   
   void updateState() {
+    
     for( int i = 0 ; i < 4 ; i++ ) {
       
       //Push counter
@@ -87,16 +81,22 @@ struct Zoom : Program {
       if( potState[i] ) potValue[i] = pot[i];
       //
     }
-    
   }
 
   void reset() {
-    //Reset states
+    display.clear( WIDTH/2 - 1 , WIDTH/2 + 2 );
+    display.clear( 0 , 1 );
+    display.clear( WIDTH - 1 , WIDTH );
+
+    white.clear( WIDTH/2 - 1 , WIDTH/2 + 2 );
+    white.clear( 0 , 1 );
+    white.clear( WIDTH - 1 , WIDTH );
+    
     for( int i = 0 ; i < 4 ; i++ ) {
-      potState[i] = true;
+      potState[i] = false;
     }
     
-    paused = false;
+    paused = false;  
   }
-
-} zoom;
+  
+} mirrorShift;

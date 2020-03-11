@@ -1,42 +1,34 @@
-struct Zoom : Program {
+struct FourColors : Program {
   
   bool channelActive[4];
   
+  colour c[4];
+  const unsigned int p[5] =  { 0 , WIDTH/4 , WIDTH*2/4 , WIDTH*3/4 , WIDTH };
+  
   void setup() {
-    potValue[0] = 511;
-    potValue[1] = 0;
-    potValue[2] = 0;
+    potValue[0] = 256;
+    potValue[1] = 512;
+    potValue[2] = 768;
     potValue[3] = 0;
+    
   }
   
   void draw() {
     if( !paused ) {
       clearBackground();
-      
-      //int d = ( potValue[0]>>2 ) + 1;
-      int d = 0;
-      float s = 0.01 + potValue[1] / 512.0 ;
-      
-      int pos = WIDTH/2 + 1;
-      
-     
-      ch[0]->lineSafe( pos );
-
-      do {   
-        pos = pos + d*d*s;
-        d++;
-      } while ( ch[0]->lineSafe( pos ) );
-            
-      pos = WIDTH/2 ;
-      d = 0;
-      
-      ch[2]->lineSafe( pos );
-      do {   
-        pos = pos - d*d*s + 1;
-        d++;
-      } while ( ch[2]->lineSafe( pos ) );
-      
-      if( channelActive[3] ) ch[3]->fill();
+    
+      //Set colors
+      for( int i = 0 ; i < 4 ; i++ ) {
+        c[i] = potValue[i]>>7 ;
+      }
+      //Draw bars
+      for( int i = 0 ; i < 4 ; i++ ) {
+        display.fill( p[i] + 1 , p[i+1] , c[i] );
+      }
+      //Dithers
+      for( int i = 0 ; i < 4 ; i++ ) {
+        dither2( 0 , WIDTH , buttonPushCounter[i]%3 , ch[i] );
+      }
      
     } else { //if paused
       copyBackground();
@@ -93,10 +85,10 @@ struct Zoom : Program {
   void reset() {
     //Reset states
     for( int i = 0 ; i < 4 ; i++ ) {
-      potState[i] = true;
+      potState[i] = false;
     }
     
     paused = false;
   }
 
-} zoom;
+} fourColors;

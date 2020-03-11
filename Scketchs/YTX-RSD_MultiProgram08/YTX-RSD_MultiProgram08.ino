@@ -1,5 +1,5 @@
 /* Autor: derfaq (Facundo Daguerre) - Rolling Shutter Displays 
- * Date: 11/06/19
+ * Date: 11/03/20
  */
 
 /*  Layout /////////////////////////////////////////////////////////////////////////////
