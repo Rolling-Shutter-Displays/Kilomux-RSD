@@ -90,7 +90,7 @@ bool pause = false;
 
 #include "TestScreenRGB.h"
 #include "MirrorShift.h"
-//#include "Paint.h"
+#include "Paint.h"
 #include "Noise.h"
 #include "FourColors.h"
 #include "Zoom.h"
@@ -99,9 +99,9 @@ bool pause = false;
 #include "Triangles2.h"
 #include "Player.h"
 
-Program* programs[8] = { &player , &testScreenRGB , &twist , &triangles2 , &mirrorShift , &zoom , &noise , &fourColors  };
+Program* programs[8] = { &player , &testScreenRGB , &twist , &triangles2 , &mirrorShift , &zoom , &noise , &paint  };
 
-int program = 5;
+int program = 7;
 const int program_size = 7;
 
 //  Beginnig  /////////////////////////////////////////////////////////////////////////////
