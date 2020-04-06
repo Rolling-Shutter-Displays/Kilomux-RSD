@@ -42,6 +42,7 @@
 #include <MIDI.h>
 MIDI_CREATE_DEFAULT_INSTANCE();
 
+
 // Definitions ////////////////////////////////////////////////////////////////////////////
 
 // 6 = White = ActivateSensorButtonPin
@@ -88,7 +89,20 @@ bool pause = false;
 
 // Screens  ///////////////////////////////////////////////////////////////////////////////
 
-                          
+
+boolean isBlack[7] = { false , true , true , true , false , true , true };
+boolean notes[24];
+
+// MIDI Input  //////////////////////////////////////////////////////////////////////////
+void handleNoteOn( byte channel , byte pitch , byte velocity ) {
+    notes[ pitch%24 ] = true;
+    led[ 4 + pitch%4 ] = HIGH;
+}
+
+void handleNoteOff( byte channel , byte pitch , byte velocity ) {
+    notes[ pitch%24 ] = false;
+    led[ 4 + pitch%4 ] = LOW;
+}
 
 //  Beginnig  /////////////////////////////////////////////////////////////////////////////
 
@@ -116,19 +130,19 @@ void setup() {
   //Setup of RSD 
   rsd.begin( 30 , BWIDTH );
   
-  rsd.attachChannel( red );
-  rsd.attachChannel( green );
-  rsd.attachChannel( blue );
-  rsd.attachChannel( white );
+  rsd.attachChannel( &red );
+  rsd.attachChannel( &green );
+  rsd.attachChannel( &blue );
+  rsd.attachChannel( &white );
 
   rsd.attachDraw( draw );
 
   //Comunications
-  MIDI.setHandleNoteOn(handleNoteOn); 
-  MIDI.setHandleNoteOff(handleNoteOff);
+  MIDI.setHandleNoteOn( handleNoteOn ); 
+  MIDI.setHandleNoteOff( handleNoteOff );
   
-  MIDI.begin(MIDI_CHANNEL_OMNI);
-  
+  MIDI.begin( MIDI_CHANNEL_OMNI );
+
 }
 
 // For ever  ///////////////////////////////////////////////////////////////////////////
@@ -139,53 +153,55 @@ void loop() {
   
   if ( !bloq ) {
     //Tuning: Kilomux way
-    int tick = map( KmShield.analogReadKm( MUX_A, 1 ) , 0 , 1023 , rsd.getLowerTick() , rsd.getHigherTick() );
-    int fine = map( KmShield.analogReadKm( MUX_A, 2 ) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
-    rsd.setTick( tick );
+    int thick = map( KmShield.analogReadKm( MUX_A, 0 ) , 0 , 1023 , rsd.getLowerThick() , rsd.getHigherThick() );
+    int fine = map( KmShield.analogReadKm( MUX_A, 1 ) , 0 , 1023 , rsd.getLowerFine() , rsd.getHigherFine() );
+    rsd.setThick( thick );
     rsd.setFine( fine );
   }
-
-  MIDI.read();
-                                                             
-}
-
-boolean isBlack[7] = { false, true, true, true, false, true , true };
-boolean notes[24];
-
-// MIDI Input  //////////////////////////////////////////////////////////////////////////
-void handleNoteOn(byte channel, byte pitch, byte velocity) {
-    notes[pitch%24] = true;
-}
-
-void handleNoteOff(byte channel, byte pitch, byte velocity) {
-    notes[pitch%24] = false;
+  
+  //MIDI update
+  MIDI.read();                                                           
 }
 
 // Let's draw! //////////////////////////////////////////////////////////////////////////
 
-//colour palette[3] =  { BLACK , BLUE , MAGENTA };
-
 void draw() {
   
+  display.clear();
   white.clear();
 
+  //Piano black and white background
   int stroke = 2;
+  
+  for( int i = 0 ; i < 14 ; i++ ) {
+    //Whites
+    white.fill( (WIDTH*i/14) + stroke , (WIDTH*(i + 1))/14 - stroke ); //Multiply first, then divide 
+    //Blacks
+    if ( isBlack[i%7] ) {
+      white.clear( (WIDTH*i/14) - WIDTH/48 , (WIDTH*i/14) + WIDTH/48  );
+    }
+  }
+
+  //Event MIDI
   int note = 0;
   
   for( int i = 0 ; i < 14 ; i++ ) {
-    colour c;
-    //whites
-    if( notes[note] ){ c = BLACK ; } else { c = WHITE; }
-    white.fill( (WIDTH*i/14) + stroke , (WIDTH*(i + 1))/14 - stroke , c ); //Multiply first, then divide
-
+    //Whites
+    if( notes[note] ){ 
+      white.clear( (WIDTH*i/14) + stroke , (WIDTH*(i + 1))/14 - stroke );
+      display.fill( (WIDTH*i/14) + stroke , (WIDTH*(i + 1))/14 - stroke , RED ); 
+    }
     //Blacks
     if ( isBlack[i%7] ) {
       note++;
-      if( notes[note] ){ c = WHITE ; } else { c = BLACK; }
-      white.fill( (WIDTH*i/14) - WIDTH/48 , (WIDTH*i/14) + WIDTH/48 , c );
+      if( notes[note] ){ 
+        display.fill( (WIDTH*i/14) - WIDTH/48 , (WIDTH*i/14) + WIDTH/48 , MAGENTA ); 
+      }
     }
+    
     note++;
   }
+  
   
   //Update Km
   updateKm();
@@ -198,30 +214,43 @@ void draw() {
 // Update Kilomux ///////////////////////////////////////////////////////////////////////
 
 void updateKm() {
-  //Update pot values
-  for( int i = 0 ; i < 8 ; i++ ) {
-    prevPot[i] = pot[i];
-    pot[i] = KmShield.analogReadKm( MUX_A, i );
-  }
   
-  //Update button states
   for( int i = 0 ; i < 8 ; i++ ) {
+    //Update pots
+    pot[i] = KmShield.analogReadKm( MUX_A, i );
+  
+    //Update buttons
     buttonState[i] = KmShield.digitalReadKm( MUX_B , i , PULLUP );
+    
+    //Click detection
+    if ( ( buttonState[i] == LOW ) && ( buttonLastState[i] == HIGH ) ) {
+        buttonPushCounter[i]++;
+    }
     
     switch ( i ) {
 
-    case 0 : //Bloq button
-      if ( buttonState[i] != buttonLastState[i] ) {
-        if ( buttonState[i] == LOW ) buttonPushCounter[i]++;
-      }
+     //Button 0 = On/Off
+      case 0: 
+        if ( buttonPushCounter[i]&1 ) {
+          led[i] = HIGH;
+          rsd.switchOff();
+        } else {
+          led[i] = LOW;
+          rsd.switchOn();
+        }
       break;
-    /*
-    case 1 : //Play-pause button
-      if ( buttonState[i] != buttonLastState[i] ) {
-        if ( buttonState[i] == LOW ) buttonPushCounter[i]++;
-      }
+      
+      //Button 1 = Bloq Freq
+      case 1: 
+        if ( buttonPushCounter[i]&1 ) {
+          led[i] = HIGH;
+          bloq = true;
+        } else {
+          led[i] = LOW;
+          bloq = false;
+        }
       break;
-
+   /*
     case 2: //prev Button
       if ( !buttonState[i] ) {
         led[i] = HIGH;
@@ -254,35 +283,62 @@ void updateKm() {
      break;
     */
     case( 4 ):
+      //Push
       if ( !buttonState[i] && buttonLastState[i] ) {
         MIDI.sendNoteOn(131, 127, 1);
+        notes[131%24] = true;
+        led[i] = HIGH;
       }
+      //Release
       if( buttonState[i] && !buttonLastState[i] ){
         MIDI.sendNoteOff(131, 0, 1);
+        notes[131%24] = false;
+        led[i] = LOW;
       }
       break;
+      
     case( 5 ):
+      //Push
       if ( !buttonState[i] &&  buttonLastState[i] ) {
         MIDI.sendNoteOn(132, 127, 1);
-      } 
+        notes[132%24] = true;
+        led[i] = HIGH;
+      }
+      //Release 
       if( buttonState[i] && !buttonLastState[i] ){
         MIDI.sendNoteOff(132, 0, 1);
+        notes[132%24] = false;
+        led[i] = LOW;
       }
       break;
+    
     case( 6 ):
+      //Push
       if ( !buttonState[i] && buttonLastState[i] ) {
         MIDI.sendNoteOn(133, 127, 1);
+        notes[133%24] = true;
+        led[i] = HIGH;
       } 
+      //Release
       if( buttonState[i] && !buttonLastState[i] ){
         MIDI.sendNoteOff(133, 0, 1);
+        notes[133%24] = false;
+        led[i] = LOW;
       }
       break;
+      
     case( 7 ):
+      //Push
       if ( !buttonState[i] && buttonLastState[i] ) {
         MIDI.sendNoteOn(134, 127, 1);
-      } 
+        notes[134%24] = true;
+        led[i] = HIGH;
+      }
+      //Release 
       if( buttonState[i] && !buttonLastState[i] ){
         MIDI.sendNoteOff(134, 0, 1);
+        notes[134%24] = false;
+        led[i] = LOW;
       }
       break;
       
@@ -315,5 +371,9 @@ void updateKm() {
       }
     }
     KmShield.digitalWriteKm( i + 8 , led[i] );
+  }
+
+  for( int i = 0 ; i < 4 ; i++ ) {
+    KmShield.digitalWriteKm( i + 12 , led[ i + 4 ] );
   }
 }
