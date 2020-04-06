@@ -87,23 +87,6 @@ bool led[8];
 bool bloq = false;
 bool pause = false;
 
-// Screens  ///////////////////////////////////////////////////////////////////////////////
-
-
-boolean isBlack[7] = { false , true , true , true , false , true , true };
-boolean notes[24];
-
-// MIDI Input  //////////////////////////////////////////////////////////////////////////
-void handleNoteOn( byte channel , byte pitch , byte velocity ) {
-    notes[ pitch%24 ] = true;
-    led[ 4 + pitch%4 ] = HIGH;
-}
-
-void handleNoteOff( byte channel , byte pitch , byte velocity ) {
-    notes[ pitch%24 ] = false;
-    led[ 4 + pitch%4 ] = LOW;
-}
-
 //  Beginnig  /////////////////////////////////////////////////////////////////////////////
 
 void setup() { 
@@ -163,6 +146,12 @@ void loop() {
   MIDI.read();                                                           
 }
 
+
+boolean notes[24];
+boolean isBlack[7] = { false , true , true , true , false , true , true };
+unsigned int whiteToNotes[14] = { 0 , 2 , 4 , 6 ,  7 ,  9 , 11 , 12 , 14 , 16 , 18 , 19 , 21 , 23 };
+unsigned int blackToNotes[10] = { 1 , 3 , 5 , 8 , 10 , 13 , 15 , 17 , 20 , 22 };
+
 // Let's draw! //////////////////////////////////////////////////////////////////////////
 
 void draw() {
@@ -170,45 +159,48 @@ void draw() {
   display.clear();
   white.clear();
 
-  //Piano black and white background
-  int stroke = 2;
+  //Display keyboard
+  
+  int stroke = 1;
+  int blacks = 0;
   
   for( int i = 0 ; i < 14 ; i++ ) {
-    //Whites
-    white.fill( (WIDTH*i/14) + stroke , (WIDTH*(i + 1))/14 - stroke ); //Multiply first, then divide 
-    //Blacks
-    if ( isBlack[i%7] ) {
+     if( notes[whiteToNotes[i]] ) {
+      display.fill( (WIDTH*i/14) + stroke , (WIDTH*(i + 1))/14 - stroke , RED );
+     } else {
+      white.fill( (WIDTH*i/14) + stroke , (WIDTH*(i + 1))/14 - stroke );
+     }
+     
+     if( isBlack[i%7] ){
       white.clear( (WIDTH*i/14) - WIDTH/48 , (WIDTH*i/14) + WIDTH/48  );
-    }
+      if( notes[blackToNotes[blacks]] ) {
+        display.fill( (WIDTH*i/14) - WIDTH/48 , (WIDTH*i/14) + WIDTH/48 , MAGENTA );
+      } else {
+        display.clear( (WIDTH*i/14) - WIDTH/48 , (WIDTH*i/14) + WIDTH/48 );
+      }
+      blacks++;
+     }
   }
 
-  //Event MIDI
-  int note = 0;
-  
-  for( int i = 0 ; i < 14 ; i++ ) {
-    //Whites
-    if( notes[note] ){ 
-      white.clear( (WIDTH*i/14) + stroke , (WIDTH*(i + 1))/14 - stroke );
-      display.fill( (WIDTH*i/14) + stroke , (WIDTH*(i + 1))/14 - stroke , RED ); 
-    }
-    //Blacks
-    if ( isBlack[i%7] ) {
-      note++;
-      if( notes[note] ){ 
-        display.fill( (WIDTH*i/14) - WIDTH/48 , (WIDTH*i/14) + WIDTH/48 , MAGENTA ); 
-      }
-    }
-    
-    note++;
-  }
-  
-  
   //Update Km
   updateKm();
 
   //Shift phase: Kilomux way
-  rsd.shiftPhase( map( pot[3] , 0 , 1023 , -1 , +2 ) );
+  rsd.shiftPhase( map( pot[2] , 0 , 1023 , -1 , +2 ) );
   
+}
+
+// MIDI Input  //////////////////////////////////////////////////////////////////////////
+
+void handleNoteOn( byte channel , byte pitch , byte velocity ) {
+    notes[ 23 - pitch%24 ] = true;
+    led[ 4 + pitch%4 ] = HIGH;
+}
+
+
+void handleNoteOff( byte channel , byte pitch , byte velocity ) {
+    notes[ 23 - pitch%24 ] = false;
+    led[ 4 + pitch%4 ] = LOW;
 }
 
 // Update Kilomux ///////////////////////////////////////////////////////////////////////
@@ -285,14 +277,14 @@ void updateKm() {
     case( 4 ):
       //Push
       if ( !buttonState[i] && buttonLastState[i] ) {
-        MIDI.sendNoteOn(131, 127, 1);
-        notes[131%24] = true;
+        MIDI.sendNoteOn( 131 , 127 , 1 );
+        notes[ 131%24 ] = true;
         led[i] = HIGH;
       }
       //Release
       if( buttonState[i] && !buttonLastState[i] ){
-        MIDI.sendNoteOff(131, 0, 1);
-        notes[131%24] = false;
+        MIDI.sendNoteOff( 131 , 0 , 1 );
+        notes[ 131%24 ] = false;
         led[i] = LOW;
       }
       break;
@@ -300,14 +292,14 @@ void updateKm() {
     case( 5 ):
       //Push
       if ( !buttonState[i] &&  buttonLastState[i] ) {
-        MIDI.sendNoteOn(132, 127, 1);
-        notes[132%24] = true;
+        MIDI.sendNoteOn( 132 , 127 , 1 );
+        notes[ 132%24 ] = true;
         led[i] = HIGH;
       }
       //Release 
       if( buttonState[i] && !buttonLastState[i] ){
-        MIDI.sendNoteOff(132, 0, 1);
-        notes[132%24] = false;
+        MIDI.sendNoteOff( 132 , 0 , 1 );
+        notes[ 132%24 ] = false;
         led[i] = LOW;
       }
       break;
@@ -315,14 +307,14 @@ void updateKm() {
     case( 6 ):
       //Push
       if ( !buttonState[i] && buttonLastState[i] ) {
-        MIDI.sendNoteOn(133, 127, 1);
-        notes[133%24] = true;
+        MIDI.sendNoteOn( 133 , 127 , 1 );
+        notes[ 133%24 ] = true;
         led[i] = HIGH;
       } 
       //Release
       if( buttonState[i] && !buttonLastState[i] ){
-        MIDI.sendNoteOff(133, 0, 1);
-        notes[133%24] = false;
+        MIDI.sendNoteOff( 133 , 0 , 1 );
+        notes[ 133%24 ] = false;
         led[i] = LOW;
       }
       break;
@@ -330,14 +322,14 @@ void updateKm() {
     case( 7 ):
       //Push
       if ( !buttonState[i] && buttonLastState[i] ) {
-        MIDI.sendNoteOn(134, 127, 1);
-        notes[134%24] = true;
+        MIDI.sendNoteOn( 134 , 127 , 1 );
+        notes[ 134%24 ] = true;
         led[i] = HIGH;
       }
       //Release 
       if( buttonState[i] && !buttonLastState[i] ){
-        MIDI.sendNoteOff(134, 0, 1);
-        notes[134%24] = false;
+        MIDI.sendNoteOff( 134 , 0 , 1 );
+        notes[ 134%24 ] = false;
         led[i] = LOW;
       }
       break;
