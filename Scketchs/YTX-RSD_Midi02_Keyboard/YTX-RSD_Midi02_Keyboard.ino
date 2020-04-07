@@ -1,32 +1,32 @@
 /* Autor: derfaq (Facundo Daguerre) - Rolling Shutter Displays 
- * Date: 11/06/19
+ * Date: 05/04/20
  */
  
 /*  Layout /////////////////////////////////////////////////////////////////////////////
  * 
- * ╔═════════════════════════════════════════════════════════════════╗
+ * ╔══════════════════════════════════════╗
  * ║                                                                 ║
  * ║   Main     Sintonía                                             ║
  * ║   Param    Gruesa   Fina     Shift                              ║
- * ║     ○        ○        ○        ○                                ║
+ * ║     ○        ○        ○        ○                              ║
  * ║    p[0]     p[1]     p[2]     p[3]              RSD             ║
  * ║   Param    Param    Param    Param               ☼              ║
  * ║     x        x        x        x                                ║
- * ║     ○        ○        ○        ○                                ║
+ * ║     ○        ○        ○        ○                              ║
  * ║    p[5]     p[6]     p[7]     p[8]                              ║
  * ║                                                                 ║
- * ║    Bloq.                                                        ║
- * ║    Freq.     x        x        x                                ║
- * ║     .        .        .        .                                ║
- * ║     ■        ■        ■        ■                                ║
- * ║   ¿Save      MIDI                 } Hold States ?               ║
+ * ║     On       Bloq.                                              ║
+ * ║     Off      Freq      x        x                               ║
+ * ║     .        .         .        .                               ║
+ * ║     ■        ■        ■        ■                              ║
+ * ║                                                                 ║
  * ║                                                                 ║               
  * ║                                                                 ║
  * ║     x        x        x        x                                ║
  * ║     .        .        .        .                                ║
- * ║     ■        ■        ■        ■                                ║
+ * ║     ■        ■        ■        ■                              ║
  * ║                                                                 ║
- * ╚═════════════════════════════════════════════════════════════════╝
+ * ╚══════════════════════════════════════╝
  * 
  */
 
@@ -85,7 +85,7 @@ char buttonPushCounter[8];   // counter for the number of button presses
 bool led[8];
 
 bool bloq = false;
-bool pause = false;
+bool pianoKeyboardVisible = true;
 
 //  Beginnig  /////////////////////////////////////////////////////////////////////////////
 
@@ -110,6 +110,8 @@ void setup() {
   KmShield.digitalWritePortKm( 0x00 , 2 );
   }
 
+  buttonPushCounter[7] = 1;
+
   //Setup of RSD 
   rsd.begin( 30 , BWIDTH );
   
@@ -125,6 +127,7 @@ void setup() {
   MIDI.setHandleNoteOff( handleNoteOff );
   
   MIDI.begin( MIDI_CHANNEL_OMNI );
+
 
 }
 
@@ -143,11 +146,11 @@ void loop() {
   }
   
   //MIDI update
-  MIDI.read();                                                           
+  MIDI.read();                                                    
 }
 
 
-boolean notes[24];
+boolean notes[3][24];
 boolean isBlack[7] = { false , true , true , true , false , true , true };
 unsigned int whiteToNotes[14] = { 0 , 2 , 4 , 6 ,  7 ,  9 , 11 , 12 , 14 , 16 , 18 , 19 , 21 , 23 };
 unsigned int blackToNotes[10] = { 1 , 3 , 5 , 8 , 10 , 13 , 15 , 17 , 20 , 22 };
@@ -159,27 +162,43 @@ void draw() {
   display.clear();
   white.clear();
 
-  //Display keyboard
   
   int stroke = 1;
-  int blacks = 0;
   
-  for( int i = 0 ; i < 14 ; i++ ) {
-     if( notes[whiteToNotes[i]] ) {
-      display.fill( (WIDTH*i/14) + stroke , (WIDTH*(i + 1))/14 - stroke , RED );
-     } else {
+  // Piano keyboard background
+  if( pianoKeyboardVisible ){
+    for( int i = 0 ; i < 14 ; i++ ) {
+      //Whites
       white.fill( (WIDTH*i/14) + stroke , (WIDTH*(i + 1))/14 - stroke );
-     }
-     
-     if( isBlack[i%7] ){
-      white.clear( (WIDTH*i/14) - WIDTH/48 , (WIDTH*i/14) + WIDTH/48  );
-      if( notes[blackToNotes[blacks]] ) {
-        display.fill( (WIDTH*i/14) - WIDTH/48 , (WIDTH*i/14) + WIDTH/48 , MAGENTA );
-      } else {
-        display.clear( (WIDTH*i/14) - WIDTH/48 , (WIDTH*i/14) + WIDTH/48 );
+
+      //Blacks
+      if( isBlack[i%7] ){
+        white.clear( (WIDTH*i/14) - WIDTH/48 , (WIDTH*i/14) + WIDTH/48  );
       }
-      blacks++;
+    }
+  }
+
+  // Piano MIDI
+  for( int j = 0 ; j < 3 ; j++ ) {
+    int blacks = 0;
+    for( int i = 0 ; i < 14 ; i++ ) {
+      //Whites
+      if( notes[j][whiteToNotes[i]] ) {
+        ch[j]->fill( (WIDTH*i/14) + stroke , (WIDTH*(i + 1))/14 - stroke );
+      } else {
+        ch[j]->clear( (WIDTH*i/14) + stroke , (WIDTH*(i + 1))/14 - stroke );
+      }
+      
+      //Blacks
+      if( isBlack[i%7] ){
+        if( notes[j][blackToNotes[blacks]] ) {
+          ch[j]->fill( (WIDTH*i/14) - WIDTH/48 , (WIDTH*i/14) + WIDTH/48 );
+        } else {
+          ch[j]->clear( (WIDTH*i/14) - WIDTH/48 , (WIDTH*i/14) + WIDTH/48 );
+        }
+        blacks++;
      }
+    }
   }
 
   //Update Km
@@ -187,20 +206,26 @@ void draw() {
 
   //Shift phase: Kilomux way
   rsd.shiftPhase( map( pot[2] , 0 , 1023 , -1 , +2 ) );
-  
 }
 
 // MIDI Input  //////////////////////////////////////////////////////////////////////////
 
 void handleNoteOn( byte channel , byte pitch , byte velocity ) {
-    notes[ 23 - pitch%24 ] = true;
-    led[ 4 + pitch%4 ] = HIGH;
+    if ( velocity == 0 )  handleNoteOff( channel , pitch , velocity );
+    if( channel <= 3 ) {
+      channel--;
+      notes[channel][ 23 - pitch%24 ] = true;
+      led[ 4 + channel ] = HIGH;
+    }
 }
 
 
 void handleNoteOff( byte channel , byte pitch , byte velocity ) {
-    notes[ 23 - pitch%24 ] = false;
-    led[ 4 + pitch%4 ] = LOW;
+    if( channel <= 3 ){
+      channel--;
+      notes[channel][ 23 - pitch%24 ] = false;
+      led[ 4 + channel ] = LOW;
+    }
 }
 
 // Update Kilomux ///////////////////////////////////////////////////////////////////////
@@ -242,22 +267,18 @@ void updateKm() {
           bloq = false;
         }
       break;
-   /*
-    case 2: //prev Button
-      if ( !buttonState[i] ) {
-        led[i] = HIGH;
-        if ( buttonLastState[i] ) {
-          if ( screen > 0 ) {
-            screen--;
-          } else {
-            screen = screen_size;
-          }
+      /*  
+      //Button 2 = Background keyboard
+      case 2: 
+        if ( buttonPushCounter[i]&1 ) {
+          led[i] = HIGH;
+          pianoKeyboardVisible = true;
+        } else {
+          led[i] = LOW;
+          pianoKeyboardVisible = false;
         }
-      } else {
-        led[i] = LOW;
-      }
       break;
-
+   /*
     case 3: //next Button
       if ( !buttonState[i] ) {
         led[i] = HIGH;
@@ -277,14 +298,14 @@ void updateKm() {
     case( 4 ):
       //Push
       if ( !buttonState[i] && buttonLastState[i] ) {
-        MIDI.sendNoteOn( 131 , 127 , 1 );
-        notes[ 131%24 ] = true;
+        MIDI.sendNoteOn( 60 , 127 , 1 );
+        notes[0][ 60%24 ] = true;
         led[i] = HIGH;
       }
       //Release
       if( buttonState[i] && !buttonLastState[i] ){
-        MIDI.sendNoteOff( 131 , 0 , 1 );
-        notes[ 131%24 ] = false;
+        MIDI.sendNoteOff( 60 , 0 , 1 );
+        notes[0][ 60%24 ] = false;
         led[i] = LOW;
       }
       break;
@@ -292,14 +313,14 @@ void updateKm() {
     case( 5 ):
       //Push
       if ( !buttonState[i] &&  buttonLastState[i] ) {
-        MIDI.sendNoteOn( 132 , 127 , 1 );
-        notes[ 132%24 ] = true;
+        MIDI.sendNoteOn( 60 , 127 , 2 );
+        notes[1][ 60%24 ] = true;
         led[i] = HIGH;
       }
       //Release 
       if( buttonState[i] && !buttonLastState[i] ){
-        MIDI.sendNoteOff( 132 , 0 , 1 );
-        notes[ 132%24 ] = false;
+        MIDI.sendNoteOff( 60 , 0 , 2 );
+        notes[1][ 60%24 ] = false;
         led[i] = LOW;
       }
       break;
@@ -307,30 +328,26 @@ void updateKm() {
     case( 6 ):
       //Push
       if ( !buttonState[i] && buttonLastState[i] ) {
-        MIDI.sendNoteOn( 133 , 127 , 1 );
-        notes[ 133%24 ] = true;
+        MIDI.sendNoteOn( 60 , 127 , 3 );
+        notes[2][ 60%24 ] = true;
         led[i] = HIGH;
       } 
       //Release
       if( buttonState[i] && !buttonLastState[i] ){
-        MIDI.sendNoteOff( 133 , 0 , 1 );
-        notes[ 133%24 ] = false;
+        MIDI.sendNoteOff( 60 , 0 , 3 );
+        notes[2][ 60%24 ] = false;
         led[i] = LOW;
       }
       break;
-      
+    
+    //Button 7 = Background keyboard 
     case( 7 ):
-      //Push
-      if ( !buttonState[i] && buttonLastState[i] ) {
-        MIDI.sendNoteOn( 134 , 127 , 1 );
-        notes[ 134%24 ] = true;
+      if ( buttonPushCounter[i]&1 ) {
         led[i] = HIGH;
-      }
-      //Release 
-      if( buttonState[i] && !buttonLastState[i] ){
-        MIDI.sendNoteOff( 134 , 0 , 1 );
-        notes[ 134%24 ] = false;
+        pianoKeyboardVisible = true;
+      } else {
         led[i] = LOW;
+        pianoKeyboardVisible = false;
       }
       break;
       
@@ -341,31 +358,9 @@ void updateKm() {
   }
 
   
-  //Update leds and states
-  for( int i = 0 ; i < 4 ; i++ ) {
-    if ( i == 0 ) {
-      if ( buttonPushCounter[i]&1 ) {
-        led[i] = HIGH;
-        bloq = true;
-      } else {
-        led[i] = LOW;
-        bloq = false;
-      }
-    }
-
-    if ( i == 1 ) {
-      if ( buttonPushCounter[i]&1 ) {
-        led[i] = HIGH;
-        pause = true;
-      } else {
-        led[i] = LOW;
-        pause = false;
-      }
-    }
+  //Update leds
+  for( int i = 0 ; i < 8 ; i++ ) {
     KmShield.digitalWriteKm( i + 8 , led[i] );
   }
 
-  for( int i = 0 ; i < 4 ; i++ ) {
-    KmShield.digitalWriteKm( i + 12 , led[ i + 4 ] );
-  }
 }
