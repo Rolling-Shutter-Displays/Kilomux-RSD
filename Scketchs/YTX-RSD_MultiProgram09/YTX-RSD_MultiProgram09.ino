@@ -39,6 +39,10 @@
 #include <Channel.h>
 #include <Screen.h>
 
+// MIDI ///////////////////////////////////////////////////////////////////////////////////
+#include <MIDI.h>
+MIDI_CREATE_DEFAULT_INSTANCE();
+
 // Definitions ////////////////////////////////////////////////////////////////////////////
 
 // 6 = White = ActivateSensorButtonPin
@@ -140,10 +144,14 @@ void setup() {
   }
   programs[program]->reset();
   
-  //Comunications
-  Serial.begin( 115200 );
+  //MIDI
+  MIDI.begin( MIDI_CHANNEL_OMNI );
   
 }
+
+/*---*/
+
+/*---*/
 
 // For ever  ///////////////////////////////////////////////////////////////////////////
 

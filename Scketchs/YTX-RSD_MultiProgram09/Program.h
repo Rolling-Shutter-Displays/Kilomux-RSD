@@ -20,4 +20,7 @@ struct Program {
   virtual void pause() { paused = true; }
   virtual void play() { paused = false;}
   virtual void reset() {}
+
+  //MIDI
+  
 };

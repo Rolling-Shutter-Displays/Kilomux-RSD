@@ -31,8 +31,10 @@ struct Manantial : Program {
           ch[i]->line( WIDTH/2 - 2 );
           ch[i]->line( WIDTH/2 + 3 );
           led[i] = HIGH; //
+          MIDI.sendNoteOn( 64 , 127 , 1 + i );
         } else {
           led[i] = LOW; //
+          MIDI.sendNoteOff( 64 , 0 , 1 + i );
         }
       }
     }
