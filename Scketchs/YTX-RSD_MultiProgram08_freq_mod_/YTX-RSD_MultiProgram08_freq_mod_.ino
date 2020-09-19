@@ -162,11 +162,10 @@ void loop() {
 void draw() {
 
   //Tuning: Kilomux way
-  float freq = 12 + ((33 - 12)/1024.0)*(float)KmShield.analogReadKm( MUX_A, 0 );
-  float fine = (float)KmShield.analogReadKm( MUX_A, 1 )/1024.0;
+  float freq = 12 + ((33 - 12)/1024.0)*(float)KmShield.analogReadKm( MUX_A, 0 ) + (float)KmShield.analogReadKm( MUX_A, 1 )/1024.0;
 
   if ( !bloq ) {
-    rsd.setFrequency( freq + fine );
+    rsd.setFrequency( freq );
   }
 
   programs[program]->draw();
@@ -178,7 +177,7 @@ void draw() {
   rsd.shiftPhase( map( pot[2] , 0 , 1023 , -1 , +2 ) );
 
   //Debug
-  //Serial.println( frameLost );
+  Serial.println( freq );
 }
 
 // Update Kilomux ///////////////////////////////////////////////////////////////////////
