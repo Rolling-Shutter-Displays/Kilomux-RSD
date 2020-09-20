@@ -40,8 +40,8 @@
 #include <Screen.h>
 
 // MIDI ///////////////////////////////////////////////////////////////////////////////////
-#include <MIDI.h>
-MIDI_CREATE_DEFAULT_INSTANCE();
+//#include <MIDI.h>
+//MIDI_CREATE_DEFAULT_INSTANCE();
 
 // Definitions ////////////////////////////////////////////////////////////////////////////
 
@@ -92,7 +92,7 @@ bool pause = false;
 #include "Utils.h"
 #include "Program.h"
 
-#include "TestScreen.h"
+#include "PaletteGenerator.h"
 #include "Manantial.h"
 #include "Paint.h"
 #include "Noise.h"
@@ -100,10 +100,10 @@ bool pause = false;
 #include "Triangles.h"
 #include "Player.h"
 
-Program* programs[8] = { &noise , &testScreen , &disolve , &manantial , &triangles , &noise , &paint , &player };
+Program* programs[7] = { &noise , &paletteGenerator , &disolve , &manantial , &triangles , &paint , &player };
 
-int program = 0;
-const int program_size = 7;
+int program = 1;
+const int program_size = 6;
 
 //  Beginnig  /////////////////////////////////////////////////////////////////////////////
 
@@ -145,7 +145,8 @@ void setup() {
   programs[program]->reset();
   
   //MIDI
-  MIDI.begin( MIDI_CHANNEL_OMNI );
+  //MIDI.begin( MIDI_CHANNEL_OMNI );
+  Serial.begin( 9600 );
   
 }
 
