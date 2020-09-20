@@ -14,66 +14,6 @@ void clearBackground() {
   white.clear();
 }
 
-
-void dither( int x0 , int x1 , Channel ch ) {
-  if ( x1 > x0 ) {
-    do {
-      if ( x1 % 2 ) ch.line( x1 );
-      x1--;
-    } while ( x1 > x0 );
-
-    if ( x1 % 2 ) ch.line( x0 ) ;
-  }
-  /*
-    } else if( x1 == x0 ) {
-
-          line( x1 );
-
-      } else {
-
-          do {
-              line( x0 );
-              x0--;
-          } while( x0 > x1 );
-
-          line( x1 );
-      }
-    }
-  */
-}
-
-void dither2( unsigned int x0 , unsigned int x1 , char o , Channel *ch ) {
-  bool right;
-
-  switch ( o ) {
-    case 0 : return; break;
-    case 1 : right = true; break;
-    case 2 : right = false; break;
-    default : return; break;
-  }
-
-  if ( x1 > x0 ) {
-    do {
-      if ( !( ( x1 % 2 )^right ) ) ch->clear( x1 );
-      x1--;
-    } while ( x1 > x0 );
-
-    if ( !( ( x1 % 2 )^right ) ) ch->clear( x0 ) ;
-
-  } else if ( x1 == x0 ) {
-
-    if ( !( ( x1 % 2 )^right ) ) ch->clear( x0 ) ;
-
-  } else { // if ( x1 < x0 )
-    do {
-      if ( !( ( x0 % 2 )^right ) )  ch->clear( x0 );
-      x0--;
-    } while ( x0 > x1 );
-
-    if ( !( ( x0 % 2 )^right ) ) ch->clear( x1 ) ;
-  }
-}
-
 void ShiftByOne( int begin , int end , Channel *ch ) {
 
   if ( begin > end ) { //Shift Right
@@ -143,23 +83,6 @@ void copyBuffer( char *src , char *dst , int t ) {
   
 }
 
-/*  
-void triangle( int begin , int end , int steps , Channel *ch ) {
-  int interval;
-  if( begin <= end ) {
-    interval = ( end - begin ) / steps;
-    for ( uint8_t i = 1 ; i < steps ; i++ ) {
-      ch->fill( begin + interval*i , begin + interval*i + map( i , 1 , steps, 0 , interval ) );
-    }
-  } else {
-    interval = ( begin - end ) / steps;
-    for ( uint8_t i = 1 ; i < steps ; i++ ) {
-      ch->fill( begin - interval*i , begin - interval*i - map( i , 1 , steps, 0 , interval ) );
-    }
-  }
-}
-*/
-
 bool fillSafe( int y0 , int y1 , int x0 , int x1 , Channel *ch ) { 
 
   //Check boundaries
@@ -194,6 +117,5 @@ bool fillSafe( int y0 , int y1 , int x0 , int x1 , Channel *ch ) {
     } while( x0 > x1 );        
     
       ch->line( x1 );
-      
     }
 }

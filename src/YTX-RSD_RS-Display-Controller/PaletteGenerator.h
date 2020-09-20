@@ -48,14 +48,11 @@ struct PaletteGenerator : Program {
   
   char palette[8] = { BLACK , BLUE , RED , MAGENTA , GREEN , CYAN , YELLOW , WHITE };
   
-  void setup() {
-    potValue[0] = 0x00;
-  }
+  void setup() {}
   
   void draw() {
     //Clear screen
-    display.clear();
-    white.clear();
+    clearBackground();
     
     //Display
     for( int i = 0 ; i < 8 ; i++ ) {
@@ -75,7 +72,6 @@ struct PaletteGenerator : Program {
     }
     
   }
-  
   
   void updateState() {
     for( int i = 0 ; i < 4 ; i++ ) {
