@@ -112,7 +112,8 @@ void setup() {
   KmShield.init();                                    // Initialize Kilomux shield hardware
   updateKm();
 
-  { // Presentation
+  // Presentation
+  {
   KmShield.digitalWritePortKm( 0x18 , 2 );
   delay(200);
   KmShield.digitalWritePortKm( 0x24 , 2 );
