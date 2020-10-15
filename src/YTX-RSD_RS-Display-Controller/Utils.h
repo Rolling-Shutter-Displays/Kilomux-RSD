@@ -119,3 +119,15 @@ bool fillSafe( int y0 , int y1 , int x0 , int x1 , Channel *ch ) {
       ch->line( x1 );
     }
 }
+
+void dither( int x0 , int x1 , Channel *ch ) {
+  if(( x0 > WIDTH )||( x1 > WIDTH )||( x0 < 0 )||( x1 < 0 )) return;
+  if( x1 > x0 ) {
+    do {
+      if( x1&1 ) ch->line( x1 );
+      x1--;
+    } while( x1 > x0 );
+
+    if( x0&1 ) ch->line( x0 );
+  }
+}

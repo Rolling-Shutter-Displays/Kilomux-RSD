@@ -102,7 +102,7 @@ bool pause = false;
 
 Program* programs[7] = { &noise , &paletteGenerator , &disolve , &manantial , &triangles , &paint , &player };
 
-int program = 1;
+int program = 6;
 const int program_size = 6;
 
 //  Beginnig  /////////////////////////////////////////////////////////////////////////////
